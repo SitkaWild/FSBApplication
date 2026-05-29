@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Practicum Class Application</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --forest: #1a3a2a;
+    --forest-mid: #2d5c40;
+    --forest-light: #4a8a5e;
+    --sage: #8aad8a;
+    --cream: #f5f0e8;
+    --warm-white: #faf8f4;
+    --ink: #1c1c1a;
+    --ink-mid: #3d3d38;
+    --ink-soft: #6b6b64;
+    --border: #d4cfc3;
+    --border-focus: #4a8a5e;
+    --error: #b85c3a;
+    --success-bg: #eef5ee;
+    --success-border: #4a8a5e;
+    --success-text: #1a3a2a;
+  }
+
+  body {
+    font-family: 'Source Sans 3', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* Header band */
+  .page-header {
+    background: var(--forest);
+    padding: 2.5rem 2rem 2rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .page-header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    opacity: 0.4;
+  }
+  .page-header .tag {
+    display: inline-block;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--sage);
+    margin-bottom: 0.75rem;
+  }
+  .page-header h1 {
+    font-family: 'Lora', serif;
+    font-size: clamp(26px, 5vw, 38px);
+    font-weight: 600;
+    color: var(--warm-white);
+    line-height: 1.2;
+    margin-bottom: 0.75rem;
+    position: relative;
+  }
+  .page-header p {
+    font-size: 16px;
+    color: rgba(250,248,244,0.72);
+    max-width: 540px;
+    margin: 0 auto;
+    line-height: 1.6;
+    position: relative;
+  }
+
+  /* Main layout */
+  .page-body {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+  }
+
+  /* Info box */
+  .info-box {
+    background: var(--warm-white);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--forest-light);
+    border-radius: 6px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 2rem;
+    font-size: 14px;
+    color: var(--ink-mid);
+    line-height: 1.6;
+  }
+  .info-box strong { color: var(--forest); }
+
+  /* Section */
+  .section { margin-bottom: 2rem; }
+  .section-title {
+    font-family: 'Lora', serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--forest-light);
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 1.25rem;
+  }
+
+  /* Field */
+  .field { margin-bottom: 1.25rem; }
+  .field label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink-mid);
+    margin-bottom: 5px;
+  }
+  .field label .req { color: var(--error); margin-left: 2px; }
+  .field .hint {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+    line-height: 1.5;
+  }
+
+  input[type=text],
+  input[type=email],
+  select,
+  textarea {
+    width: 100%;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 15px;
+    color: var(--ink);
+    background: var(--warm-white);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 9px 12px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    appearance: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px rgba(74,138,94,0.12);
+  }
+  textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b6b64' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 36px;
+    cursor: pointer;
+  }
+
+  /* Radio */
+  .radio-group { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 4px; }
+  .radio-group label {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 15px; font-weight: 400; color: var(--ink);
+    cursor: pointer; margin: 0;
+  }
+  .radio-group input[type=radio] {
+    width: 18px; height: 18px; accent-color: var(--forest-light); cursor: pointer;
+  }
+
+  /* Conditional */
+  .conditional { display: none; }
+  .conditional.visible { display: block; }
+
+  /* Divider */
+  hr { border: none; border-top: 1px solid var(--border); margin: 1.75rem 0; }
+
+  /* Actions */
+  .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 1.75rem; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 22px; border-radius: 6px; border: 1px solid;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 15px; font-weight: 500; cursor: pointer;
+    transition: all 0.15s;
+    text-decoration: none;
+  }
+  .btn-primary {
+    background: var(--forest);
+    border-color: var(--forest);
+    color: var(--warm-white);
+  }
+  .btn-primary:hover { background: var(--forest-mid); border-color: var(--forest-mid); }
+  .btn-secondary {
+    background: transparent;
+    border-color: var(--border);
+    color: var(--ink-mid);
+  }
+  .btn-secondary:hover { background: var(--warm-white); border-color: var(--forest-light); }
+  .btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+  /* Success */
+  .success-msg {
+    display: none;
+    margin-top: 1.25rem;
+    padding: 14px 16px;
+    background: var(--success-bg);
+    border: 1px solid var(--success-border);
+    border-radius: 6px;
+    color: var(--success-text);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .success-msg strong { display: block; margin-bottom: 2px; font-size: 15px; }
+
+  /* Footer */
+  .page-footer {
+    text-align: center;
+    padding: 1.5rem;
+    font-size: 12px;
+    color: var(--ink-soft);
+    border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 480px) {
+    .page-body { padding: 1.5rem 1rem 3rem; }
+    .actions { flex-direction: column; }
+    .btn { justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <span class="tag">Application Form</span>
+  <h1>Policy &amp; Procedures<br>Practicum Class</h1>
+  <p>Hello, thank you for your interest in the Practicum Class. Please complete all required fields below.</p>
+</header>
+
+<main class="page-body">
+
+  <div class="info-box">
+    <strong>Before you begin:</strong> If you are accepted into the program, you are expected to attend all classes unless prior arrangements have been made with course instructors.
+  </div>
+
+  <!-- Personal Info -->
+  <div class="section">
+    <div class="section-title">Personal information</div>
+
+    <div class="field">
+      <label for="name">1. Name <span class="req">*</span></label>
+      <input type="text" id="name" placeholder="Your full name" autocomplete="name" />
+    </div>
+
+    <div class="field">
+      <label for="email">2. Email <span class="req">*</span></label>
+      <input type="email" id="email" placeholder="your@email.com" autocomplete="email" />
+    </div>
+
+    <div class="field">
+      <label for="community">3. What community are you from? <span class="req">*</span></label>
+      <input type="text" id="community" placeholder="Your community" />
+    </div>
+  </div>
+
+  <!-- Student Type -->
+  <div class="section">
+    <div class="section-title">Student type</div>
+
+    <div class="field">
+      <label for="student-type">4. I am a… <span class="req">*</span></label>
+      <select id="student-type" onchange="handleStudentType()">
+        <option value="">— Select one —</option>
+        <option value="highschool">High School Student</option>
+        <option value="adult">Adult Student</option>
+      </select>
+    </div>
+
+    <!-- Adult only -->
+    <div class="field conditional" id="field-org">
+      <label for="org">4a. Organization affiliated with</label>
+      <input type="text" id="org" placeholder="Organization name" />
+    </div>
+
+    <!-- High school only -->
+    <div class="field conditional" id="field-sponsor">
+      <label for="sponsor">5. Adult sponsor <span class="req">*</span></label>
+      <p class="hint">Remote high school students need an adult sponsor for this program. Please identify that person (e.g. teacher, community leader).</p>
+      <input type="text" id="sponsor" placeholder="Sponsor's name and role" />
+    </div>
+
+    <div class="field conditional" id="field-school">
+      <label for="school">6. High School Name <span class="req">*</span></label>
+      <input type="text" id="school" placeholder="Name of your high school" />
+    </div>
+  </div>
+
+  <!-- Background -->
+  <div class="section">
+    <div class="section-title">Background &amp; goals</div>
+
+    <div class="field">
+      <label for="resources">7. Relationship to local resources <span class="req">*</span></label>
+      <p class="hint">Tell us more about your relationship to local resources and hunting / fishing / subsistence / commercial activities you are involved in.</p>
+      <textarea id="resources" placeholder="Share your experience and involvement…"></textarea>
+    </div>
+
+    <div class="field">
+      <label for="goals">8. Hopes and goals <span class="req">*</span></label>
+      <p class="hint">What are your hopes to get out of this program and what might this experience benefit for your future?</p>
+      <textarea id="goals" placeholder="Tell us what you hope to achieve…"></textarea>
+    </div>
+  </div>
+
+  <!-- Attendance -->
+  <div class="section">
+    <div class="section-title">Attendance</div>
+
+    <div class="field">
+      <label>9. Will you be able to attend all classes? <span class="req">*</span></label>
+      <div class="radio-group">
+        <label><input type="radio" name="attend" value="yes" onchange="handleAttend()" /> Yes</label>
+        <label><input type="radio" name="attend" value="no" onchange="handleAttend()" /> No</label>
+      </div>
+    </div>
+
+    <div class="field conditional" id="field-attend-reason">
+      <label for="attend-reason">9a. Please explain <span class="req">*</span></label>
+      <textarea id="attend-reason" placeholder="List dates or reasons you cannot attend…" style="min-height:70px;"></textarea>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <hr />
+  <div class="actions">
+    <button class="btn btn-primary" onclick="submitForm()">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      Submit application
+    </button>
+    <button class="btn btn-secondary" onclick="saveForm()">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Save as text file
+    </button>
+  </div>
+
+  <div class="success-msg" id="success-msg">
+    <strong>✓ Application submitted!</strong>
+    Your email client should open with your responses pre-filled. If it didn't open automatically, click "Save as text file" to keep a copy of your application.
+  </div>
+
+</main>
+
+<footer class="page-footer">
+  Policy &amp; Procedures Practicum Class &mdash; Application
+</footer>
+
+<script>
+  // ── TO DO: Replace with the actual recipient email address ──
+  const RECIPIENT_EMAIL = 'your@email.com';
+
+  function handleStudentType() {
+    const v = document.getElementById('student-type').value;
+    toggle('field-org', v === 'adult');
+    toggle('field-sponsor', v === 'highschool');
+    toggle('field-school', v === 'highschool');
+  }
+
+  function handleAttend() {
+    const v = document.querySelector('input[name="attend"]:checked');
+    toggle('field-attend-reason', v && v.value === 'no');
+  }
+
+  function toggle(id, show) {
+    document.getElementById(id).classList.toggle('visible', show);
+  }
+
+  function collectData() {
+    const studentType = document.getElementById('student-type').value;
+    const attendVal = document.querySelector('input[name="attend"]:checked');
+    return {
+      name: document.getElementById('name').value.trim(),
+      email: document.getElementById('email').value.trim(),
+      community: document.getElementById('community').value.trim(),
+      studentType,
+      org: document.getElementById('org').value.trim(),
+      sponsor: document.getElementById('sponsor').value.trim(),
+      school: document.getElementById('school').value.trim(),
+      resources: document.getElementById('resources').value.trim(),
+      goals: document.getElementById('goals').value.trim(),
+      attend: attendVal ? attendVal.value : '',
+      attendReason: document.getElementById('attend-reason').value.trim()
+    };
+  }
+
+  function validate(d) {
+    const required = [
+      [d.name, 'Please enter your name (question 1).'],
+      [d.email, 'Please enter your email (question 2).'],
+      [d.community, 'Please enter your community (question 3).'],
+      [d.studentType, 'Please select a student type (question 4).'],
+      [d.resources, 'Please answer question 7.'],
+      [d.goals, 'Please answer question 8.'],
+      [d.attend, 'Please answer question 9.'],
+    ];
+    if (d.studentType === 'highschool') {
+      required.push([d.sponsor, 'Please identify your adult sponsor (question 5).']);
+      required.push([d.school, 'Please enter your high school name (question 6).']);
+    }
+    if (d.attend === 'no') {
+      required.push([d.attendReason, 'Please explain which classes you cannot attend (question 9a).']);
+    }
+    for (const [val, msg] of required) {
+      if (!val) { alert(msg); return false; }
+    }
+    return true;
+  }
+
+  function buildText(d) {
+    const typeLabel = d.studentType === 'highschool' ? 'High School Student' : 'Adult Student';
+    let t = 'PRACTICUM CLASS APPLICATION\n';
+    t += '='.repeat(42) + '\n\n';
+    t += `1.  Name:       ${d.name}\n`;
+    t += `2.  Email:      ${d.email}\n`;
+    t += `3.  Community:  ${d.community}\n`;
+    t += `4.  Type:       ${typeLabel}\n`;
+    if (d.studentType === 'adult' && d.org) t += `    4a. Organization: ${d.org}\n`;
+    if (d.studentType === 'highschool') {
+      if (d.sponsor) t += `5.  Adult sponsor: ${d.sponsor}\n`;
+      if (d.school)  t += `6.  High school:   ${d.school}\n`;
+    }
+    t += `\n7.  Relationship to local resources:\n    ${d.resources.replace(/\n/g, '\n    ')}\n`;
+    t += `\n8.  Hopes and goals:\n    ${d.goals.replace(/\n/g, '\n    ')}\n`;
+    t += `\n9.  Attend all classes: ${d.attend.toUpperCase()}`;
+    if (d.attend === 'no' && d.attendReason) t += `\n    9a. Reason: ${d.attendReason}`;
+    t += '\n\n' + '='.repeat(42) + '\n';
+    return t;
+  }
+
+  function submitForm() {
+    const d = collectData();
+    if (!validate(d)) return;
+    const body = buildText(d);
+    const subject = `Practicum Class Application – ${d.name}`;
+    const mailto = `mailto:${RECIPIENT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = mailto;
+    document.getElementById('success-msg').style.display = 'block';
+    document.getElementById('success-msg').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function saveForm() {
+    const d = collectData();
+    if (!validate(d)) return;
+    const text = buildText(d);
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `application_${(d.name || 'FSB').replace(/\s+/g, '_')}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+</script>
+</body>
+</html>
