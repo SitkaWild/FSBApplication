@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin — Practicum Applications</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --forest: #1a3a2a; --forest-mid: #2d5c40; --forest-light: #4a8a5e;
+    --sage: #8aad8a; --cream: #f5f0e8; --warm-white: #faf8f4;
+    --ink: #1c1c1a; --ink-mid: #3d3d38; --ink-soft: #6b6b64;
+    --border: #d4cfc3; --border-focus: #4a8a5e;
+    --pending-bg: #fef9ec; --pending-text: #7a5c00; --pending-border: #e8c840;
+    --approved-bg: #eef5ee; --approved-text: #1a3a2a; --approved-border: #4a8a5e;
+    --denied-bg: #fdf0ed; --denied-text: #7a2a10; --denied-border: #d4704a;
+  }
+  body { font-family: 'Source Sans 3', sans-serif; background: var(--cream); color: var(--ink); min-height: 100vh; }
+
+  /* Login screen */
+  #login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 2rem; }
+  .login-card { background: var(--warm-white); border: 1px solid var(--border); border-radius: 10px; padding: 2.5rem 2rem; width: 100%; max-width: 360px; text-align: center; }
+  .login-card h1 { font-family: 'Lora', serif; font-size: 22px; font-weight: 600; color: var(--forest); margin-bottom: 0.4rem; }
+  .login-card p { font-size: 14px; color: var(--ink-soft); margin-bottom: 1.75rem; }
+  .login-card input[type=password] { width: 100%; font-family: 'Source Sans 3', sans-serif; font-size: 15px; color: var(--ink); background: var(--cream); border: 1px solid var(--border); border-radius: 6px; padding: 10px 14px; margin-bottom: 1rem; text-align: center; letter-spacing: 0.1em; }
+  .login-card input:focus { outline: none; border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(74,138,94,0.12); }
+  .login-error { font-size: 13px; color: #b85c3a; margin-bottom: 0.75rem; display: none; }
+
+  /* Admin layout */
+  #admin-screen { display: none; }
+  .admin-header { background: var(--forest); padding: 1.25rem 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+  .admin-header-left h1 { font-family: 'Lora', serif; font-size: 20px; font-weight: 600; color: var(--warm-white); }
+  .admin-header-left p { font-size: 13px; color: var(--sage); margin-top: 2px; }
+  .admin-header-right { display: flex; align-items: center; gap: 10px; }
+  .badge-count { background: rgba(255,255,255,0.12); color: var(--warm-white); font-size: 13px; padding: 4px 12px; border-radius: 20px; }
+  .logout-btn { background: transparent; border: 1px solid rgba(255,255,255,0.25); color: var(--warm-white); font-size: 13px; padding: 5px 14px; border-radius: 6px; cursor: pointer; font-family: 'Source Sans 3', sans-serif; }
+  .logout-btn:hover { background: rgba(255,255,255,0.08); }
+
+  /* Filters */
+  .filters { background: var(--warm-white); border-bottom: 1px solid var(--border); padding: 0.85rem 2rem; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .filter-btn { background: transparent; border: 1px solid var(--border); border-radius: 20px; padding: 5px 14px; font-size: 13px; font-family: 'Source Sans 3', sans-serif; color: var(--ink-mid); cursor: pointer; transition: all 0.15s; }
+  .filter-btn:hover { border-color: var(--forest-light); color: var(--forest); }
+  .filter-btn.active { background: var(--forest); border-color: var(--forest); color: var(--warm-white); }
+
+  /* Table */
+  .table-wrap { padding: 1.5rem 2rem; overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  thead th { text-align: left; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); padding: 0 12px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  tbody tr { border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s; }
+  tbody tr:hover { background: var(--warm-white); }
+  tbody td { padding: 12px; vertical-align: middle; }
+  .td-name { font-weight: 500; color: var(--ink); }
+  .td-community { color: var(--ink-mid); }
+  .td-type { font-size: 13px; color: var(--ink-soft); }
+  .td-date { font-size: 13px; color: var(--ink-soft); white-space: nowrap; }
+  .status-badge { display: inline-block; font-size: 12px; font-weight: 500; padding: 3px 10px; border-radius: 20px; }
+  .status-Pending { background: var(--pending-bg); color: var(--pending-text); border: 1px solid var(--pending-border); }
+  .status-Approved { background: var(--approved-bg); color: var(--approved-text); border: 1px solid var(--approved-border); }
+  .status-Denied { background: var(--denied-bg); color: var(--denied-text); border: 1px solid var(--denied-border); }
+  .empty-state { text-align: center; padding: 3rem; color: var(--ink-soft); font-size: 15px; }
+  .loading-state { text-align: center; padding: 3rem; color: var(--ink-soft); font-size: 15px; }
+
+  /* Modal */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(26,58,42,0.45); z-index: 100; overflow-y: auto; padding: 2rem 1rem; }
+  .modal-overlay.open { display: flex; align-items: flex-start; justify-content: center; }
+  .modal { background: var(--warm-white); border-radius: 10px; width: 100%; max-width: 640px; margin: auto; overflow: hidden; }
+  .modal-header { background: var(--forest); padding: 1.25rem 1.5rem; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .modal-header h2 { font-family: 'Lora', serif; font-size: 20px; font-weight: 600; color: var(--warm-white); }
+  .modal-header p { font-size: 13px; color: var(--sage); margin-top: 3px; }
+  .modal-close { background: transparent; border: none; color: rgba(250,248,244,0.6); font-size: 22px; cursor: pointer; line-height: 1; padding: 0; flex-shrink: 0; }
+  .modal-close:hover { color: var(--warm-white); }
+  .modal-body { padding: 1.5rem; }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; }
+  .detail-item label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); display: block; margin-bottom: 3px; }
+  .detail-item p { font-size: 14px; color: var(--ink); }
+  .detail-full { margin-bottom: 1.25rem; }
+  .detail-full label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); display: block; margin-bottom: 5px; }
+  .detail-full p { font-size: 14px; color: var(--ink); line-height: 1.6; background: var(--cream); border-radius: 6px; padding: 10px 12px; }
+  .modal-divider { border: none; border-top: 1px solid var(--border); margin: 1.25rem 0; }
+  .modal-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .modal-actions .status-label { font-size: 13px; color: var(--ink-soft); margin-right: 4px; }
+  .action-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; border-radius: 6px; border: 1px solid; font-family: 'Source Sans 3', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+  .btn-approve { background: var(--approved-bg); border-color: var(--approved-border); color: var(--approved-text); }
+  .btn-approve:hover { background: #d4ebd4; }
+  .btn-deny { background: var(--denied-bg); border-color: var(--denied-border); color: var(--denied-text); }
+  .btn-deny:hover { background: #f5d8d0; }
+  .btn-pending { background: var(--pending-bg); border-color: var(--pending-border); color: var(--pending-text); }
+  .btn-pending:hover { background: #faefc0; }
+
+  @media (max-width: 600px) {
+    .table-wrap { padding: 1rem; }
+    .admin-header { padding: 1rem; }
+    .filters { padding: 0.75rem 1rem; }
+    .detail-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="login-screen">
+  <div class="login-card">
+    <h1>Admin Access</h1>
+    <p>Practicum Class Applications</p>
+    <p class="login-error" id="login-error">Incorrect password. Please try again.</p>
+    <input type="password" id="password-input" placeholder="Enter password" onkeydown="if(event.key==='Enter')doLogin()" />
+    <button class="action-btn btn-approve" style="width:100%;justify-content:center;padding:10px;" onclick="doLogin()">Enter</button>
+  </div>
+</div>
+
+<!-- Admin -->
+<div id="admin-screen">
+  <div class="admin-header">
+    <div class="admin-header-left">
+      <h1>Applications</h1>
+      <p>Policy &amp; Procedures Practicum Class</p>
+    </div>
+    <div class="admin-header-right">
+      <span class="badge-count" id="total-count">Loading…</span>
+      <button class="logout-btn" onclick="doLogout()">Log out</button>
+    </div>
+  </div>
+
+  <div class="filters">
+    <button class="filter-btn active" onclick="setFilter('All', this)">All</button>
+    <button class="filter-btn" onclick="setFilter('Pending', this)">Pending</button>
+    <button class="filter-btn" onclick="setFilter('Approved', this)">Approved</button>
+    <button class="filter-btn" onclick="setFilter('Denied', this)">Denied</button>
+  </div>
+
+  <div class="table-wrap">
+    <div class="loading-state" id="loading-state">Loading applications…</div>
+    <table id="app-table" style="display:none;">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Community</th>
+          <th>Type</th>
+          <th>Submitted</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="app-tbody"></tbody>
+    </table>
+    <div class="empty-state" id="empty-state" style="display:none;">No applications found.</div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalIfBg(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div>
+        <h2 id="modal-name">Applicant</h2>
+        <p id="modal-meta"></p>
+      </div>
+      <button class="modal-close" onclick="closeModal()">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="detail-grid">
+        <div class="detail-item"><label>Email</label><p id="d-email"></p></div>
+        <div class="detail-item"><label>Community</label><p id="d-community"></p></div>
+        <div class="detail-item"><label>Student type</label><p id="d-type"></p></div>
+        <div class="detail-item"><label>Attend all classes</label><p id="d-attend"></p></div>
+        <div class="detail-item" id="d-org-wrap"><label>Organization</label><p id="d-org"></p></div>
+        <div class="detail-item" id="d-sponsor-wrap"><label>Adult sponsor</label><p id="d-sponsor"></p></div>
+        <div class="detail-item" id="d-school-wrap"><label>High school</label><p id="d-school"></p></div>
+        <div class="detail-item" id="d-reason-wrap"><label>Absence reason</label><p id="d-reason"></p></div>
+      </div>
+      <div class="detail-full">
+        <label>Relationship to local resources</label>
+        <p id="d-resources"></p>
+      </div>
+      <div class="detail-full">
+        <label>Hopes and goals</label>
+        <p id="d-goals"></p>
+      </div>
+      <hr class="modal-divider" />
+      <div class="modal-actions">
+        <span class="status-label">Set status:</span>
+        <button class="action-btn btn-approve" onclick="updateStatus('Approved')">✓ Approve</button>
+        <button class="action-btn btn-deny" onclick="updateStatus('Denied')">✗ Deny</button>
+        <button class="action-btn btn-pending" onclick="updateStatus('Pending')">◌ Pending</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://qrwdjvcglweqwaldourl.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_gg5x6Jm2xMxPP65Zair-Nw_Ck6gOVYt';
+  const ADMIN_PASSWORD = 'Tong@ss1967';
+
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let allApps = [];
+  let currentFilter = 'All';
+  let currentId = null;
+
+  function doLogin() {
+    const val = document.getElementById('password-input').value;
+    if (val === ADMIN_PASSWORD) {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('admin-screen').style.display = 'block';
+      loadApplications();
+    } else {
+      document.getElementById('login-error').style.display = 'block';
+      document.getElementById('password-input').value = '';
+    }
+  }
+
+  function doLogout() {
+    document.getElementById('admin-screen').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('password-input').value = '';
+    document.getElementById('login-error').style.display = 'none';
+    allApps = [];
+  }
+
+  async function loadApplications() {
+    document.getElementById('loading-state').style.display = 'block';
+    document.getElementById('app-table').style.display = 'none';
+    document.getElementById('empty-state').style.display = 'none';
+
+    const { data, error } = await sb
+      .from('applications')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    document.getElementById('loading-state').style.display = 'none';
+
+    if (error || !data) {
+      document.getElementById('empty-state').textContent = 'Error loading applications.';
+      document.getElementById('empty-state').style.display = 'block';
+      return;
+    }
+
+    allApps = data;
+    renderTable();
+  }
+
+  function setFilter(f, btn) {
+    currentFilter = f;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderTable();
+  }
+
+  function renderTable() {
+    const filtered = currentFilter === 'All' ? allApps : allApps.filter(a => a.status === currentFilter);
+    const tbody = document.getElementById('app-tbody');
+    tbody.innerHTML = '';
+
+    document.getElementById('total-count').textContent =
+      allApps.length + ' total · ' +
+      allApps.filter(a => a.status === 'Pending').length + ' pending';
+
+    if (filtered.length === 0) {
+      document.getElementById('app-table').style.display = 'none';
+      document.getElementById('empty-state').style.display = 'block';
+      document.getElementById('empty-state').textContent = 'No applications found.';
+      return;
+    }
+
+    document.getElementById('app-table').style.display = 'table';
+    document.getElementById('empty-state').style.display = 'none';
+
+    filtered.forEach(app => {
+      const tr = document.createElement('tr');
+      const date = new Date(app.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      tr.innerHTML = `
+        <td class="td-name">${esc(app.name)}</td>
+        <td class="td-community">${esc(app.community)}</td>
+        <td class="td-type">${esc(app.student_type)}</td>
+        <td class="td-date">${date}</td>
+        <td><span class="status-badge status-${esc(app.status)}">${esc(app.status)}</span></td>
+      `;
+      tr.onclick = () => openModal(app);
+      tbody.appendChild(tr);
+    });
+  }
+
+  function openModal(app) {
+    currentId = app.id;
+    document.getElementById('modal-name').textContent = app.name;
+    document.getElementById('modal-meta').textContent = app.email + ' · ' + app.community;
+    document.getElementById('d-email').textContent = app.email || '—';
+    document.getElementById('d-community').textContent = app.community || '—';
+    document.getElementById('d-type').textContent = app.student_type || '—';
+    document.getElementById('d-attend').textContent = app.attend_all === 'yes' ? 'Yes' : 'No';
+    document.getElementById('d-resources').textContent = app.local_resources || '—';
+    document.getElementById('d-goals').textContent = app.goals || '—';
+
+    const orgWrap = document.getElementById('d-org-wrap');
+    const sponsorWrap = document.getElementById('d-sponsor-wrap');
+    const schoolWrap = document.getElementById('d-school-wrap');
+    const reasonWrap = document.getElementById('d-reason-wrap');
+
+    if (app.organization) { document.getElementById('d-org').textContent = app.organization; orgWrap.style.display = 'block'; } else { orgWrap.style.display = 'none'; }
+    if (app.sponsor) { document.getElementById('d-sponsor').textContent = app.sponsor; sponsorWrap.style.display = 'block'; } else { sponsorWrap.style.display = 'none'; }
+    if (app.high_school) { document.getElementById('d-school').textContent = app.high_school; schoolWrap.style.display = 'block'; } else { schoolWrap.style.display = 'none'; }
+    if (app.attend_reason) { document.getElementById('d-reason').textContent = app.attend_reason; reasonWrap.style.display = 'block'; } else { reasonWrap.style.display = 'none'; }
+
+    document.getElementById('modal-overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    document.getElementById('modal-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+    currentId = null;
+  }
+
+  function closeModalIfBg(e) {
+    if (e.target === document.getElementById('modal-overlay')) closeModal();
+  }
+
+  async function updateStatus(status) {
+    if (!currentId) return;
+    const { error } = await sb.from('applications').update({ status }).eq('id', currentId);
+    if (error) { alert('Error updating status.'); return; }
+    const app = allApps.find(a => a.id === currentId);
+    if (app) app.status = status;
+    renderTable();
+    closeModal();
+  }
+
+  function esc(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+</script>
+</body>
+</html>
