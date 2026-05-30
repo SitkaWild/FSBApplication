@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Welcome — Practicum Class Onboarding</title>
-<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&family=Source+Sans+3:wght@300;400;500;600&family=Dancing+Script:wght@600&display=swap" rel="stylesheet" />
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -74,12 +74,11 @@
   .coc-box ul { padding-left: 1.25rem; margin-bottom: 0.75rem; }
   .coc-box ul li { margin-bottom: 0.4rem; }
 
-  /* Signature canvas */
-  .sig-wrap { border: 1px solid var(--border); border-radius: 6px; background: white; position: relative; margin-bottom: 8px; }
-  .sig-canvas { display: block; width: 100%; height: 140px; cursor: crosshair; touch-action: none; border-radius: 6px; }
-  .sig-hint { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 13px; color: var(--ink-soft); pointer-events: none; text-align: center; }
-  .sig-clear { font-size: 12px; color: var(--forest-light); background: none; border: none; cursor: pointer; padding: 0; font-family: 'Source Sans 3', sans-serif; }
-  .sig-clear:hover { text-decoration: underline; }
+  /* Typed signature */
+  .sig-type-wrap { border: 1px solid var(--border); border-radius: 6px; background: white; padding: 1rem 1.25rem; margin-bottom: 8px; min-height: 80px; display: flex; align-items: center; justify-content: center; }
+  .sig-type-input { width: 100%; font-family: 'Dancing Script', cursive; font-size: 32px; color: #1c1c1a; border: none; background: transparent; outline: none; text-align: center; }
+  .sig-type-input::placeholder { font-family: 'Source Sans 3', sans-serif; font-size: 14px; color: var(--ink-soft); }
+  .sig-disclaimer { font-size: 12px; color: var(--ink-soft); line-height: 1.5; font-style: italic; margin-top: 6px; margin-bottom: 10px; }
   .sig-or { text-align: center; font-size: 13px; color: var(--ink-soft); margin: 10px 0; }
 
   /* File upload */
@@ -168,19 +167,19 @@
   <div id="loading-screen" style="text-align:center;padding:3rem;color:var(--ink-soft);">Loading your onboarding…</div>
   <div id="error-screen">
     <h2>Invalid Link</h2>
-    <p>This onboarding link appears to be invalid or expired. Please contact <a href="mailto:info@sitkawild.org" style="color:var(--forest-light);">info@sitkawild.org</a> for assistance.</p>
+    <p>This onboarding link appears to be invalid or expired. Please contact <a href="mailto:scs@sitkawild.org" style="color:var(--forest-light);">scs@sitkawild.org</a> for assistance.</p>
   </div>
   <div id="success-screen">
     <div class="check">🌲</div>
     <h2>Onboarding Complete!</h2>
-    <p>Thank you for completing your onboarding. We look forward to seeing you in class! If you have any questions, reach out to <a href="mailto:info@sitkawild.org" style="color:var(--forest-light);">info@sitkawild.org</a>.</p>
+    <p>Thank you for completing your onboarding. We look forward to seeing you in class! If you have any questions, reach out to <a href="mailto:scs@sitkawild.org" style="color:var(--forest-light);">scs@sitkawild.org</a>.</p>
   </div>
   <div id="main-content" style="display:none;">
 
     <!-- STEP 1: Student Info -->
     <div class="step-panel active" id="step-1">
       <div class="welcome-box">
-        Greetings! We are excited for you to join us for the class! Before class begins we need to collect information for travel, UAS registration and complete a few waivers. Please follow the prompts, if you have any issues or questions reach out to us at <a href="mailto:info@sitkawild.org">info@sitkawild.org</a>
+        Greetings! We are excited for you to join us for the class! Before class begins we need to collect information for travel, UAS registration and complete a few waivers. Please follow the prompts, if you have any issues or questions reach out to us at <a href="mailto:scs@sitkawild.org">scs@sitkawild.org</a>
       </div>
 
       <h2 class="step-heading">Student Information</h2>
@@ -307,23 +306,11 @@
       <!-- Signature -->
       <div class="field">
         <label>Signature <span class="req">*</span></label>
-        <p class="hint">Sign below using your finger or mouse, or upload an image of your signature.</p>
-        <div class="sig-wrap">
-          <canvas class="sig-canvas" id="sig-canvas"></canvas>
-          <div class="sig-hint" id="sig-hint">Sign here</div>
+        <p class="hint">Type your name below to sign. Your typed name will appear in signature style.</p>
+        <div class="sig-type-wrap">
+          <input class="sig-type-input" id="sig-typed" type="text" placeholder="Type your name to sign" autocomplete="off" />
         </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-          <button class="sig-clear" onclick="clearSig()">Clear signature</button>
-          <span style="font-size:12px;color:var(--ink-soft);" id="sig-status"></span>
-        </div>
-        <div class="sig-or">— or upload a signature image —</div>
-        <div class="file-upload-area" onclick="document.getElementById('sig-upload').click()">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--ink-soft)" stroke-width="1.5" style="margin-bottom:6px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          <p>Click to upload signature image</p>
-          <span>PNG, JPG accepted</span>
-          <input type="file" id="sig-upload" accept="image/*" onchange="handleSigUpload(this)" />
-          <div class="file-chosen" id="sig-upload-name"></div>
-        </div>
+        <p class="sig-disclaimer">By typing your name above, you agree to adopt this electronic signature as your legal signature for this document.</p>
       </div>
 
       <div class="field-row">
@@ -410,8 +397,6 @@
   let appId = null;
   let appData = null;
   let currentStep = 1;
-  let sigDrawn = false;
-  let sigUploaded = false;
 
   // Get app ID from URL
   async function init() {
@@ -476,59 +461,20 @@
 
   function v(id) { return document.getElementById(id).value.trim(); }
 
-  // Signature canvas
   function initSignature() {
-    const canvas = document.getElementById('sig-canvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = canvas.offsetWidth;
-    canvas.height = 140;
-    ctx.strokeStyle = '#1c1c1a';
-    ctx.lineWidth = 2;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    let drawing = false;
-
-    function getPos(e) {
-      const r = canvas.getBoundingClientRect();
-      const src = e.touches ? e.touches[0] : e;
-      return { x: (src.clientX - r.left) * (canvas.width / r.width), y: (src.clientY - r.top) * (canvas.height / r.height) };
-    }
-
-    canvas.addEventListener('mousedown', e => { drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); document.getElementById('sig-hint').style.display = 'none'; });
-    canvas.addEventListener('mousemove', e => { if (!drawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); sigDrawn = true; });
-    canvas.addEventListener('mouseup', () => { drawing = false; });
-    canvas.addEventListener('mouseleave', () => { drawing = false; });
-    canvas.addEventListener('touchstart', e => { e.preventDefault(); drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); document.getElementById('sig-hint').style.display = 'none'; }, { passive: false });
-    canvas.addEventListener('touchmove', e => { e.preventDefault(); if (!drawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); sigDrawn = true; }, { passive: false });
-    canvas.addEventListener('touchend', () => { drawing = false; });
-  }
-
-  function clearSig() {
-    const canvas = document.getElementById('sig-canvas');
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    sigDrawn = false;
-    document.getElementById('sig-hint').style.display = 'block';
-  }
-
-  function handleSigUpload(input) {
-    if (input.files && input.files[0]) {
-      document.getElementById('sig-upload-name').textContent = '✓ ' + input.files[0].name;
-      sigUploaded = true;
-    }
+    // Typed signature — no canvas needed
   }
 
   function getSignatureData() {
-    if (sigDrawn) return document.getElementById('sig-canvas').toDataURL();
-    if (sigUploaded) return 'uploaded:' + document.getElementById('sig-upload').files[0].name;
-    return null;
+    const typed = document.getElementById('sig-typed').value.trim();
+    return typed ? 'typed:' + typed : null;
   }
 
   async function submitOnboarding() {
     if (!v('coc-typed-name')) { alert('Please type your full name to sign the Code of Conduct.'); return; }
     if (!v('coc-date')) { alert('Please enter the date for the Code of Conduct.'); return; }
     const sig = getSignatureData();
-    if (!sig) { alert('Please sign the Code of Conduct using the canvas or upload a signature image.'); return; }
+    if (!sig) { alert('Please type your name in the signature field to sign the Code of Conduct.'); return; }
 
     const btn = document.getElementById('submit-btn');
     btn.disabled = true;
@@ -548,12 +494,12 @@
       ec_email: v('ec-email'),
       coc_signed_name: v('coc-typed-name'),
       coc_signed_date: v('coc-date'),
-      coc_signature: sig.substring(0, 500)
+      coc_signature: sig
     };
 
     const { error } = await sb.from('applications').update(payload).eq('id', appId);
     if (error) {
-      alert('Error submitting onboarding. Please try again or contact info@sitkawild.org');
+      alert('Error submitting onboarding. Please try again or contact scs@sitkawild.org');
       btn.disabled = false;
       btn.textContent = 'Submit onboarding';
       return;
