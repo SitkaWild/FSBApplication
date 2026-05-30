@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Welcome — Practicum Class Onboarding</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --forest: #1a3a2a; --forest-mid: #2d5c40; --forest-light: #4a8a5e;
+    --sage: #8aad8a; --cream: #f5f0e8; --warm-white: #faf8f4;
+    --ink: #1c1c1a; --ink-mid: #3d3d38; --ink-soft: #6b6b64;
+    --border: #d4cfc3; --border-focus: #4a8a5e; --error: #b85c3a;
+    --success-bg: #eef5ee; --success-border: #4a8a5e; --success-text: #1a3a2a;
+  }
+  body { font-family: 'Source Sans 3', sans-serif; background: var(--cream); color: var(--ink); min-height: 100vh; }
+
+  /* Header */
+  .page-header { background: var(--forest); padding: 2rem 2rem 1.75rem; text-align: center; position: relative; overflow: hidden; }
+  .page-header::before { content: ''; position: absolute; inset: 0; background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); opacity: 0.4; }
+  .page-header .tag { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--sage); margin-bottom: 0.5rem; position: relative; }
+  .page-header h1 { font-family: 'Lora', serif; font-size: clamp(22px, 4vw, 32px); font-weight: 600; color: var(--warm-white); line-height: 1.2; position: relative; }
+
+  /* Progress */
+  .progress-wrap { background: var(--warm-white); border-bottom: 1px solid var(--border); padding: 1rem 2rem; }
+  .progress-steps { display: flex; align-items: center; max-width: 680px; margin: 0 auto; gap: 0; }
+  .step-item { display: flex; align-items: center; flex: 1; }
+  .step-circle { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--border); background: var(--cream); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: var(--ink-soft); flex-shrink: 0; transition: all 0.3s; }
+  .step-circle.active { border-color: var(--forest-light); background: var(--forest-light); color: white; }
+  .step-circle.done { border-color: var(--forest); background: var(--forest); color: white; }
+  .step-label { font-size: 12px; color: var(--ink-soft); margin-left: 8px; white-space: nowrap; }
+  .step-label.active { color: var(--forest); font-weight: 600; }
+  .step-line { flex: 1; height: 2px; background: var(--border); margin: 0 8px; transition: background 0.3s; }
+  .step-line.done { background: var(--forest-light); }
+
+  /* Body */
+  .page-body { max-width: 680px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+  /* Step panels */
+  .step-panel { display: none; }
+  .step-panel.active { display: block; }
+  .step-heading { font-family: 'Lora', serif; font-size: 20px; font-weight: 600; color: var(--forest); margin-bottom: 0.4rem; }
+  .step-subheading { font-size: 14px; color: var(--ink-soft); margin-bottom: 1.75rem; line-height: 1.5; }
+
+  /* Welcome box */
+  .welcome-box { background: var(--warm-white); border: 1px solid var(--border); border-left: 4px solid var(--forest-light); border-radius: 6px; padding: 1.25rem 1.5rem; margin-bottom: 2rem; font-size: 15px; color: var(--ink-mid); line-height: 1.7; }
+  .welcome-box a { color: var(--forest-light); }
+
+  /* Fields */
+  .field { margin-bottom: 1.25rem; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .field label { display: block; font-size: 14px; font-weight: 600; color: var(--ink-mid); margin-bottom: 5px; }
+  .field label .req { color: var(--error); margin-left: 2px; }
+  .field label .opt { font-size: 12px; font-weight: 400; color: var(--ink-soft); margin-left: 4px; }
+  .field .hint { font-size: 13px; color: var(--ink-soft); margin-bottom: 6px; line-height: 1.5; }
+  input[type=text], input[type=email], input[type=tel], input[type=date], select, textarea {
+    width: 100%; font-family: 'Source Sans 3', sans-serif; font-size: 15px; color: var(--ink);
+    background: var(--warm-white); border: 1px solid var(--border); border-radius: 6px;
+    padding: 9px 12px; transition: border-color 0.15s, box-shadow 0.15s; appearance: none;
+  }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(74,138,94,0.12); }
+  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b6b64' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 36px; cursor: pointer; }
+  textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+
+  /* Section divider */
+  .section-title { font-family: 'Lora', serif; font-size: 13px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--forest-light); padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); margin-bottom: 1.25rem; margin-top: 1.75rem; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 1.75rem 0; }
+
+  /* Code of conduct */
+  .coc-box { background: var(--warm-white); border: 1px solid var(--border); border-radius: 6px; padding: 1.25rem 1.5rem; max-height: 280px; overflow-y: auto; font-size: 13px; line-height: 1.7; color: var(--ink-mid); margin-bottom: 1.25rem; }
+  .coc-box h3 { font-family: 'Lora', serif; font-size: 15px; font-weight: 600; color: var(--forest); margin-bottom: 0.75rem; }
+  .coc-box p { margin-bottom: 0.75rem; }
+  .coc-box ul { padding-left: 1.25rem; margin-bottom: 0.75rem; }
+  .coc-box ul li { margin-bottom: 0.4rem; }
+
+  /* Signature canvas */
+  .sig-wrap { border: 1px solid var(--border); border-radius: 6px; background: white; position: relative; margin-bottom: 8px; }
+  .sig-canvas { display: block; width: 100%; height: 140px; cursor: crosshair; touch-action: none; border-radius: 6px; }
+  .sig-hint { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 13px; color: var(--ink-soft); pointer-events: none; text-align: center; }
+  .sig-clear { font-size: 12px; color: var(--forest-light); background: none; border: none; cursor: pointer; padding: 0; font-family: 'Source Sans 3', sans-serif; }
+  .sig-clear:hover { text-decoration: underline; }
+  .sig-or { text-align: center; font-size: 13px; color: var(--ink-soft); margin: 10px 0; }
+
+  /* File upload */
+  .file-upload-area { border: 2px dashed var(--border); border-radius: 6px; padding: 1.5rem; text-align: center; cursor: pointer; transition: all 0.15s; background: var(--warm-white); }
+  .file-upload-area:hover { border-color: var(--forest-light); background: var(--success-bg); }
+  .file-upload-area p { font-size: 14px; color: var(--ink-soft); margin-bottom: 4px; }
+  .file-upload-area span { font-size: 12px; color: var(--ink-soft); }
+  .file-upload-area input[type=file] { display: none; }
+  .file-chosen { font-size: 13px; color: var(--forest); margin-top: 6px; }
+
+  /* Placeholder doc */
+  .doc-placeholder { background: var(--warm-white); border: 1px solid var(--border); border-radius: 6px; padding: 1rem 1.25rem; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .doc-placeholder-left { display: flex; align-items: center; gap: 10px; }
+  .doc-icon { width: 36px; height: 36px; background: var(--cream); border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .doc-icon svg { width: 18px; height: 18px; color: var(--ink-soft); }
+  .doc-name { font-size: 14px; font-weight: 500; color: var(--ink); }
+  .doc-status { font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
+  .doc-badge { font-size: 11px; padding: 3px 10px; border-radius: 20px; background: var(--cream); border: 1px solid var(--border); color: var(--ink-soft); white-space: nowrap; }
+
+  /* Buttons */
+  .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 2rem; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; border-radius: 6px; border: 1px solid; font-family: 'Source Sans 3', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+  .btn-primary { background: var(--forest); border-color: var(--forest); color: var(--warm-white); }
+  .btn-primary:hover { background: var(--forest-mid); }
+  .btn-secondary { background: transparent; border-color: var(--border); color: var(--ink-mid); }
+  .btn-secondary:hover { background: var(--warm-white); border-color: var(--forest-light); }
+  .btn-outline { background: transparent; border-color: var(--forest-light); color: var(--forest); }
+  .btn-outline:hover { background: var(--success-bg); }
+  .btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  /* Success screen */
+  #success-screen { display: none; text-align: center; padding: 3rem 1rem; }
+  #success-screen .check { font-size: 48px; margin-bottom: 1rem; }
+  #success-screen h2 { font-family: 'Lora', serif; font-size: 26px; color: var(--forest); margin-bottom: 0.75rem; }
+  #success-screen p { font-size: 15px; color: var(--ink-mid); max-width: 480px; margin: 0 auto; line-height: 1.6; }
+
+  /* Error screen */
+  #error-screen { display: none; text-align: center; padding: 3rem 1rem; }
+  #error-screen h2 { font-family: 'Lora', serif; font-size: 22px; color: var(--error); margin-bottom: 0.75rem; }
+  #error-screen p { font-size: 15px; color: var(--ink-mid); }
+
+  /* Print styles */
+  @media print {
+    .page-header, .progress-wrap, .actions, .sig-clear, .file-upload-area { display: none !important; }
+    .page-body { padding: 0; max-width: 100%; }
+    .step-panel { display: block !important; }
+    body { background: white; }
+  }
+
+  @media (max-width: 560px) {
+    .field-row { grid-template-columns: 1fr; }
+    .progress-wrap { padding: 0.75rem 1rem; }
+    .step-label { display: none; }
+    .page-body { padding: 1.5rem 1rem 3rem; }
+  }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <span class="tag">Onboarding</span>
+  <h1>Practicum Class — Welcome</h1>
+</header>
+
+<div class="progress-wrap">
+  <div class="progress-steps">
+    <div class="step-item">
+      <div class="step-circle active" id="sc-1">1</div>
+      <span class="step-label active" id="sl-1">Student Info</span>
+    </div>
+    <div class="step-line" id="line-1"></div>
+    <div class="step-item">
+      <div class="step-circle" id="sc-2">2</div>
+      <span class="step-label" id="sl-2">Emergency Contact</span>
+    </div>
+    <div class="step-line" id="line-2"></div>
+    <div class="step-item">
+      <div class="step-circle" id="sc-3">3</div>
+      <span class="step-label" id="sl-3">Documents</span>
+    </div>
+  </div>
+</div>
+
+<main class="page-body">
+  <div id="loading-screen" style="text-align:center;padding:3rem;color:var(--ink-soft);">Loading your onboarding…</div>
+  <div id="error-screen">
+    <h2>Invalid Link</h2>
+    <p>This onboarding link appears to be invalid or expired. Please contact <a href="mailto:info@sitkawild.org" style="color:var(--forest-light);">info@sitkawild.org</a> for assistance.</p>
+  </div>
+  <div id="success-screen">
+    <div class="check">🌲</div>
+    <h2>Onboarding Complete!</h2>
+    <p>Thank you for completing your onboarding. We look forward to seeing you in class! If you have any questions, reach out to <a href="mailto:info@sitkawild.org" style="color:var(--forest-light);">info@sitkawild.org</a>.</p>
+  </div>
+  <div id="main-content" style="display:none;">
+
+    <!-- STEP 1: Student Info -->
+    <div class="step-panel active" id="step-1">
+      <div class="welcome-box">
+        Greetings! We are excited for you to join us for the class! Before class begins we need to collect information for travel, UAS registration and complete a few waivers. Please follow the prompts, if you have any issues or questions reach out to us at <a href="mailto:info@sitkawild.org">info@sitkawild.org</a>
+      </div>
+
+      <h2 class="step-heading">Student Information</h2>
+      <p class="step-subheading">Please enter your information exactly as it appears on your government-issued ID.</p>
+
+      <div class="field">
+        <label for="legal-name">Full name (as on ID) <span class="req">*</span></label>
+        <input type="text" id="legal-name" placeholder="First Middle Last" />
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="gender">Gender <span class="req">*</span></label>
+          <select id="gender">
+            <option value="">— Select —</option>
+            <option>Male</option>
+            <option>Female</option>
+            <option>Non-binary</option>
+            <option>Prefer not to say</option>
+            <option>Prefer to self-describe</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="dob">Date of birth <span class="req">*</span></label>
+          <input type="date" id="dob" />
+        </div>
+      </div>
+      <div class="field">
+        <label for="allergies">Allergies <span class="req">*</span></label>
+        <p class="hint">List any food, medication, or environmental allergies. Enter "None" if not applicable.</p>
+        <input type="text" id="allergies" placeholder="e.g. Peanuts, Penicillin, or None" />
+      </div>
+      <div class="field">
+        <label for="alaska-miles">Alaska Airlines Mileage Plan number <span class="opt">(optional)</span></label>
+        <input type="text" id="alaska-miles" placeholder="e.g. 123456789" />
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" onclick="goToStep(2)">
+          Next: Emergency Contact
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <button class="btn btn-outline" onclick="printPage()">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Print / Save PDF
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 2: Emergency Contact -->
+    <div class="step-panel" id="step-2">
+      <h2 class="step-heading">Emergency Contact</h2>
+      <p class="step-subheading">Please provide a contact person in case of emergency during the program.</p>
+
+      <div class="field">
+        <label for="ec-name">Full name <span class="req">*</span></label>
+        <input type="text" id="ec-name" placeholder="Contact's full name" />
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="ec-relationship">Relationship <span class="req">*</span></label>
+          <input type="text" id="ec-relationship" placeholder="e.g. Parent, Guardian, Spouse" />
+        </div>
+        <div class="field">
+          <label for="ec-phone">Phone number <span class="req">*</span></label>
+          <input type="tel" id="ec-phone" placeholder="(907) 000-0000" />
+        </div>
+      </div>
+      <div class="field">
+        <label for="ec-address">Address <span class="req">*</span></label>
+        <input type="text" id="ec-address" placeholder="Street address, City, State, ZIP" />
+      </div>
+      <div class="field">
+        <label for="ec-email">Email <span class="req">*</span></label>
+        <input type="email" id="ec-email" placeholder="contact@email.com" />
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-secondary" onclick="goToStep(1)">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          Back
+        </button>
+        <button class="btn btn-primary" onclick="goToStep(3)">
+          Next: Documents & Waivers
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <button class="btn btn-outline" onclick="printPage()">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Print / Save PDF
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 3: Documents -->
+    <div class="step-panel" id="step-3">
+      <h2 class="step-heading">Documents &amp; Waivers</h2>
+      <p class="step-subheading">Please review and sign the Code of Conduct below. Additional documents will be added soon.</p>
+
+      <!-- Code of Conduct -->
+      <div class="section-title">SCS Youth Code of Conduct</div>
+      <div class="coc-box">
+        <h3>Sitka Conservation Society Youth Code of Conduct</h3>
+        <p>The SCS Code of Conduct applies to all activities coordinated through SCS including local, district, state and national activities.</p>
+        <p><strong>While attending SCS activities and events, I will:</strong></p>
+        <ul>
+          <li>Obey all rules established by the SCS program, the affiliate program partners, and all local, state and federal laws. Conduct myself in a courteous manner and be respectful of the authority of adult volunteers, youth leaders, SCS staff and others in leadership roles.</li>
+          <li>Not use, accept or carry alcohol, drugs or tobacco, or associate with or remain in the presence of others using the substances.</li>
+          <li>Know that the possession or use of firearms is prohibited, except when part of an approved shooting sports educational program.</li>
+          <li>Respect all persons, facilities and vehicles. I will be responsible for any damage caused resulting from my behavior.</li>
+          <li>Help others have a pleasant experience by making every attempt to include all participants in activities.</li>
+          <li>Be in the assigned program area (for example: dorms, cabins, programs, etc.) at all times.</li>
+          <li>Use appropriate language and dress appropriately for each event.</li>
+          <li>Acknowledge that searches of personal property may take place when there is reasonable suspicion of violations of law or policies.</li>
+        </ul>
+        <p><strong>While attending overnight events, I will also:</strong></p>
+        <ul>
+          <li>Not leave the activity or event unless permission is secured from the adult in charge.</li>
+          <li>Be in my sleeping area and honor established curfews.</li>
+          <li>Not enter the sleeping areas of members of the opposite gender and will I not invite non SCS participants to the sleeping areas.</li>
+        </ul>
+        <p>I have read the SCS Code of Conduct and agree to live up to these expectations while participating in SCS programs and events. I am aware that my actions and decisions affect others. I understand that my failure to act with good character could result in consequences, including dismissal from the event or program. I am willing to accept the appropriate consequences of my actions.</p>
+        <p style="font-size:11px;color:var(--ink-soft);margin-top:1rem;">This code of conduct has been gratefully adopted from SCS's professional partner in youth programming, University of Alaska Fairbanks Cooperative Extension's 4-H program.</p>
+      </div>
+
+      <!-- Signature -->
+      <div class="field">
+        <label>Signature <span class="req">*</span></label>
+        <p class="hint">Sign below using your finger or mouse, or upload an image of your signature.</p>
+        <div class="sig-wrap">
+          <canvas class="sig-canvas" id="sig-canvas"></canvas>
+          <div class="sig-hint" id="sig-hint">Sign here</div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <button class="sig-clear" onclick="clearSig()">Clear signature</button>
+          <span style="font-size:12px;color:var(--ink-soft);" id="sig-status"></span>
+        </div>
+        <div class="sig-or">— or upload a signature image —</div>
+        <div class="file-upload-area" onclick="document.getElementById('sig-upload').click()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--ink-soft)" stroke-width="1.5" style="margin-bottom:6px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <p>Click to upload signature image</p>
+          <span>PNG, JPG accepted</span>
+          <input type="file" id="sig-upload" accept="image/*" onchange="handleSigUpload(this)" />
+          <div class="file-chosen" id="sig-upload-name"></div>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="coc-typed-name">Typed full name <span class="req">*</span></label>
+          <input type="text" id="coc-typed-name" placeholder="Type your full name" />
+        </div>
+        <div class="field">
+          <label for="coc-date">Date <span class="req">*</span></label>
+          <input type="date" id="coc-date" />
+        </div>
+      </div>
+
+      <hr />
+
+      <!-- Placeholder documents -->
+      <div class="section-title">Additional Documents</div>
+
+      <div class="doc-placeholder">
+        <div class="doc-placeholder-left">
+          <div class="doc-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <div><div class="doc-name">Class Syllabus</div><div class="doc-status">Coming soon</div></div>
+        </div>
+        <span class="doc-badge">Pending upload</span>
+      </div>
+
+      <div class="doc-placeholder">
+        <div class="doc-placeholder-left">
+          <div class="doc-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <div><div class="doc-name">UAS Registration Form</div><div class="doc-status">Coming soon</div></div>
+        </div>
+        <span class="doc-badge">Pending upload</span>
+      </div>
+
+      <div class="doc-placeholder" id="uas-parent-wrap">
+        <div class="doc-placeholder-left">
+          <div class="doc-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <div><div class="doc-name">UAS Parent Form</div><div class="doc-status">For high school students — coming soon</div></div>
+        </div>
+        <span class="doc-badge">Pending upload</span>
+      </div>
+
+      <div class="doc-placeholder">
+        <div class="doc-placeholder-left">
+          <div class="doc-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <div><div class="doc-name">Media Release</div><div class="doc-status">Coming soon</div></div>
+        </div>
+        <span class="doc-badge">Pending upload</span>
+      </div>
+
+      <div class="doc-placeholder" id="parent-approval-wrap">
+        <div class="doc-placeholder-left">
+          <div class="doc-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <div><div class="doc-name">Parent Approval</div><div class="doc-status">For high school students — coming soon</div></div>
+        </div>
+        <span class="doc-badge">Pending upload</span>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-secondary" onclick="goToStep(2)">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          Back
+        </button>
+        <button class="btn btn-primary" id="submit-btn" onclick="submitOnboarding()">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          Submit onboarding
+        </button>
+        <button class="btn btn-outline" onclick="printPage()">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Print / Save PDF
+        </button>
+      </div>
+    </div>
+
+  </div><!-- end main-content -->
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://vcipvtfjjzzukejjuggf.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZjaXB2dGZqanp6dWtlamp1Z2dmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwODUzMzAsImV4cCI6MjA5NTY2MTMzMH0.pqcxaMKogZmpBzv8jYLZd8Zl-1EY3JkqwQCM5rPZU8M';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let appId = null;
+  let appData = null;
+  let currentStep = 1;
+  let sigDrawn = false;
+  let sigUploaded = false;
+
+  // Get app ID from URL
+  async function init() {
+    const params = new URLSearchParams(window.location.search);
+    appId = params.get('id');
+    if (!appId) { showError(); return; }
+
+    const { data, error } = await sb.from('applications').select('*').eq('id', appId).single();
+    if (error || !data) { showError(); return; }
+    appData = data;
+
+    // Hide HS-only docs if adult
+    if (data.student_type === 'Adult Student') {
+      document.getElementById('uas-parent-wrap').style.display = 'none';
+      document.getElementById('parent-approval-wrap').style.display = 'none';
+    }
+
+    document.getElementById('loading-screen').style.display = 'none';
+    document.getElementById('main-content').style.display = 'block';
+    initSignature();
+  }
+
+  function showError() {
+    document.getElementById('loading-screen').style.display = 'none';
+    document.getElementById('error-screen').style.display = 'block';
+  }
+
+  // Step navigation
+  function goToStep(n) {
+    if (n > currentStep && !validateStep(currentStep)) return;
+    document.getElementById('step-' + currentStep).classList.remove('active');
+    document.getElementById('sc-' + currentStep).classList.remove('active');
+    document.getElementById('sc-' + currentStep).classList.add('done');
+    document.getElementById('sc-' + currentStep).textContent = '✓';
+    document.getElementById('sl-' + currentStep).classList.remove('active');
+    if (currentStep < n) document.getElementById('line-' + currentStep).classList.add('done');
+    currentStep = n;
+    document.getElementById('step-' + currentStep).classList.add('active');
+    document.getElementById('sc-' + currentStep).classList.add('active');
+    document.getElementById('sc-' + currentStep).classList.remove('done');
+    document.getElementById('sc-' + currentStep).textContent = currentStep;
+    document.getElementById('sl-' + currentStep).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function validateStep(n) {
+    if (n === 1) {
+      if (!v('legal-name')) { alert('Please enter your full name as it appears on your ID.'); return false; }
+      if (!v('gender')) { alert('Please select your gender.'); return false; }
+      if (!v('dob')) { alert('Please enter your date of birth.'); return false; }
+      if (!v('allergies')) { alert('Please enter your allergies or "None".'); return false; }
+    }
+    if (n === 2) {
+      if (!v('ec-name')) { alert('Please enter your emergency contact\'s name.'); return false; }
+      if (!v('ec-relationship')) { alert('Please enter your relationship to the contact.'); return false; }
+      if (!v('ec-phone')) { alert('Please enter a phone number.'); return false; }
+      if (!v('ec-address')) { alert('Please enter an address.'); return false; }
+      if (!v('ec-email')) { alert('Please enter an email address.'); return false; }
+    }
+    return true;
+  }
+
+  function v(id) { return document.getElementById(id).value.trim(); }
+
+  // Signature canvas
+  function initSignature() {
+    const canvas = document.getElementById('sig-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = canvas.offsetWidth;
+    canvas.height = 140;
+    ctx.strokeStyle = '#1c1c1a';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    let drawing = false;
+
+    function getPos(e) {
+      const r = canvas.getBoundingClientRect();
+      const src = e.touches ? e.touches[0] : e;
+      return { x: (src.clientX - r.left) * (canvas.width / r.width), y: (src.clientY - r.top) * (canvas.height / r.height) };
+    }
+
+    canvas.addEventListener('mousedown', e => { drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); document.getElementById('sig-hint').style.display = 'none'; });
+    canvas.addEventListener('mousemove', e => { if (!drawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); sigDrawn = true; });
+    canvas.addEventListener('mouseup', () => { drawing = false; });
+    canvas.addEventListener('mouseleave', () => { drawing = false; });
+    canvas.addEventListener('touchstart', e => { e.preventDefault(); drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); document.getElementById('sig-hint').style.display = 'none'; }, { passive: false });
+    canvas.addEventListener('touchmove', e => { e.preventDefault(); if (!drawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); sigDrawn = true; }, { passive: false });
+    canvas.addEventListener('touchend', () => { drawing = false; });
+  }
+
+  function clearSig() {
+    const canvas = document.getElementById('sig-canvas');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    sigDrawn = false;
+    document.getElementById('sig-hint').style.display = 'block';
+  }
+
+  function handleSigUpload(input) {
+    if (input.files && input.files[0]) {
+      document.getElementById('sig-upload-name').textContent = '✓ ' + input.files[0].name;
+      sigUploaded = true;
+    }
+  }
+
+  function getSignatureData() {
+    if (sigDrawn) return document.getElementById('sig-canvas').toDataURL();
+    if (sigUploaded) return 'uploaded:' + document.getElementById('sig-upload').files[0].name;
+    return null;
+  }
+
+  async function submitOnboarding() {
+    if (!v('coc-typed-name')) { alert('Please type your full name to sign the Code of Conduct.'); return; }
+    if (!v('coc-date')) { alert('Please enter the date for the Code of Conduct.'); return; }
+    const sig = getSignatureData();
+    if (!sig) { alert('Please sign the Code of Conduct using the canvas or upload a signature image.'); return; }
+
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.textContent = '…Submitting';
+
+    const payload = {
+      onboarding_complete: true,
+      legal_name: v('legal-name'),
+      gender: v('gender'),
+      dob: v('dob'),
+      allergies: v('allergies'),
+      alaska_miles: v('alaska-miles') || null,
+      ec_name: v('ec-name'),
+      ec_relationship: v('ec-relationship'),
+      ec_phone: v('ec-phone'),
+      ec_address: v('ec-address'),
+      ec_email: v('ec-email'),
+      coc_signed_name: v('coc-typed-name'),
+      coc_signed_date: v('coc-date'),
+      coc_signature: sig.substring(0, 500)
+    };
+
+    const { error } = await sb.from('applications').update(payload).eq('id', appId);
+    if (error) {
+      alert('Error submitting onboarding. Please try again or contact info@sitkawild.org');
+      btn.disabled = false;
+      btn.textContent = 'Submit onboarding';
+      return;
+    }
+
+    document.getElementById('main-content').style.display = 'none';
+    document.getElementById('success-screen').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function printPage() {
+    window.print();
+  }
+
+  init();
+</script>
+</body>
+</html>
