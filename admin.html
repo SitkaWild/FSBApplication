@@ -91,6 +91,10 @@
   .onboarding-link-box { background: var(--approved-bg); border: 1px solid var(--approved-border); border-radius: 6px; padding: 10px 14px; font-size: 13px; color: var(--approved-text); margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
   .onboarding-link-box a { color: var(--forest); word-break: break-all; }
   .copy-btn { font-size: 12px; background: var(--forest); color: white; border: none; border-radius: 4px; padding: 4px 10px; cursor: pointer; font-family: 'Source Sans 3', sans-serif; white-space: nowrap; }
+  .download-row { display: flex; gap: 8px; justify-content: flex-end; margin-bottom: 1rem; }
+  .btn-download { font-size: 13px; padding: 6px 14px; border-radius: 6px; border: 1px solid var(--forest-light); background: transparent; color: var(--forest); cursor: pointer; font-family: 'Source Sans 3', sans-serif; display: inline-flex; align-items: center; gap: 6px; }
+  .btn-download:hover { background: var(--success-bg); }
+  .btn-download svg { width: 14px; height: 14px; }
 
   .modal-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
   .action-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; border-radius: 6px; border: 1px solid; font-family: 'Source Sans 3', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
@@ -203,6 +207,16 @@
       <!-- Onboarding tab -->
       <div class="tab-panel" id="tab-onboarding">
         <div id="onboarding-complete-view" style="display:none;">
+          <div class="download-row">
+            <button class="btn-download" onclick="downloadOnboardingPDF()">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download as PDF
+            </button>
+            <button class="btn-download" onclick="downloadOnboardingCSV()">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download as CSV
+            </button>
+          </div>
           <div class="detail-grid">
             <div class="detail-item"><label>Legal name</label><p id="o-legal-name"></p></div>
             <div class="detail-item"><label>Gender</label><p id="o-gender"></p></div>
@@ -552,6 +566,90 @@ Sitka Conservation Society`;
 
   function closeModalIfBg(e) {
     if (e.target === document.getElementById('modal-overlay')) closeModal();
+  }
+
+  function csvEscape(val) {
+    const s = String(val == null ? '' : val);
+    if (/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+    return s;
+  }
+
+  function downloadOnboardingCSV() {
+    if (!currentApp || !currentApp.onboarding_complete) return;
+    const a = currentApp;
+    const rows = [
+      ['Field', 'Value'],
+      ['Applicant Name', a.name],
+      ['Email', a.email],
+      ['Legal Name', a.legal_name],
+      ['Gender', a.gender],
+      ['Date of Birth', a.dob],
+      ['Allergies', a.allergies],
+      ['Alaska Airlines #', a.alaska_miles],
+      ['Emergency Contact Name', a.ec_name],
+      ['Emergency Contact Relationship', a.ec_relationship],
+      ['Emergency Contact Phone', a.ec_phone],
+      ['Emergency Contact Email', a.ec_email],
+      ['Emergency Contact Address', a.ec_address],
+      ['Code of Conduct Signed Name', a.coc_signed_name],
+      ['Code of Conduct Signed Date', a.coc_signed_date],
+    ];
+    const csv = rows.map(r => r.map(csvEscape).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `onboarding_${(a.name || 'applicant').replace(/\s+/g, '_')}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
+  function downloadOnboardingPDF() {
+    if (!currentApp || !currentApp.onboarding_complete) return;
+    const a = currentApp;
+    const dobStr = a.dob ? new Date(a.dob).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '—';
+    const cocDateStr = a.coc_signed_date ? new Date(a.coc_signed_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '—';
+    let sigHtml = '—';
+    if (a.coc_signature && a.coc_signature.startsWith('data:image')) {
+      sigHtml = `<img src="${a.coc_signature}" style="max-width:280px;max-height:100px;border:1px solid #d4cfc3;border-radius:6px;" />`;
+    } else if (a.coc_signature) {
+      sigHtml = esc(a.coc_signature.replace('typed:', '').replace('uploaded:', 'Uploaded file: '));
+    }
+
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8" /><title>Onboarding — ${esc(a.name)}</title>
+<style>
+  body { font-family: Arial, Helvetica, sans-serif; color:#1c1c1a; padding:2rem; max-width:680px; margin:0 auto; }
+  h1 { font-size:20px; border-bottom:2px solid #1a3a2a; padding-bottom:8px; margin-bottom:1.25rem; }
+  h2 { font-size:13px; text-transform:uppercase; letter-spacing:0.06em; color:#4a8a5e; margin:1.5rem 0 0.6rem; }
+  .row { display:flex; gap:1.5rem; margin-bottom:8px; }
+  .label { font-weight:600; width:190px; flex-shrink:0; font-size:13px; color:#6b6b64; }
+  .value { font-size:14px; }
+</style></head><body>
+<h1>Onboarding Record — ${esc(a.name)}</h1>
+<h2>Student Information</h2>
+<div class="row"><span class="label">Legal Name</span><span class="value">${esc(a.legal_name) || '—'}</span></div>
+<div class="row"><span class="label">Gender</span><span class="value">${esc(a.gender) || '—'}</span></div>
+<div class="row"><span class="label">Date of Birth</span><span class="value">${dobStr}</span></div>
+<div class="row"><span class="label">Allergies</span><span class="value">${esc(a.allergies) || '—'}</span></div>
+${a.alaska_miles ? `<div class="row"><span class="label">Alaska Airlines #</span><span class="value">${esc(a.alaska_miles)}</span></div>` : ''}
+<h2>Emergency Contact</h2>
+<div class="row"><span class="label">Name</span><span class="value">${esc(a.ec_name) || '—'}</span></div>
+<div class="row"><span class="label">Relationship</span><span class="value">${esc(a.ec_relationship) || '—'}</span></div>
+<div class="row"><span class="label">Phone</span><span class="value">${esc(a.ec_phone) || '—'}</span></div>
+<div class="row"><span class="label">Email</span><span class="value">${esc(a.ec_email) || '—'}</span></div>
+<div class="row"><span class="label">Address</span><span class="value">${esc(a.ec_address) || '—'}</span></div>
+<h2>Code of Conduct</h2>
+<div class="row"><span class="label">Signed Name</span><span class="value">${esc(a.coc_signed_name) || '—'}</span></div>
+<div class="row"><span class="label">Signed Date</span><span class="value">${cocDateStr}</span></div>
+<div class="row"><span class="label">Signature</span><span class="value">${sigHtml}</span></div>
+</body></html>`;
+
+    const win = window.open('', '_blank');
+    win.document.write(html);
+    win.document.close();
+    win.onload = () => { win.focus(); win.print(); };
   }
 
   function esc(str) {
