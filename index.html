@@ -118,8 +118,8 @@
       <textarea id="resources" placeholder="Share your experience and involvement…"></textarea>
     </div>
     <div class="field">
-      <label for="goals">8. Hopes and goals <span class="req">*</span></label>
-      <p class="hint">What are your hopes to get out of this program and what might this experience benefit for your future?</p>
+      <label for="goals">8. Goals <span class="req">*</span></label>
+      <p class="hint">What do you hope to learn or gain from this program, and how might this experience help you in the future?</p>
       <textarea id="goals" placeholder="Tell us what you hope to achieve…"></textarea>
     </div>
   </div>
@@ -128,6 +128,7 @@
     <div class="section-title">Attendance</div>
     <div class="field">
       <label>9. Will you be able to attend all classes? <span class="req">*</span></label>
+      <p class="hint">Southeast Regional Advisory Council Meeting; meeting dates October 20th–22nd, 2026 in Gustavus, Alaska.</p>
       <div class="radio-group">
         <label><input type="radio" name="attend" value="yes" onchange="handleAttend()" /> Yes</label>
         <label><input type="radio" name="attend" value="no" onchange="handleAttend()" /> No</label>
@@ -242,7 +243,7 @@
       if (d.school)  t += `6.  High school:   ${d.school}\n`;
     }
     t += `\n7.  Relationship to local resources:\n    ${d.resources.replace(/\n/g, '\n    ')}\n`;
-    t += `\n8.  Hopes and goals:\n    ${d.goals.replace(/\n/g, '\n    ')}\n`;
+    t += `\n8.  Goals:\n    ${d.goals.replace(/\n/g, '\n    ')}\n`;
     t += `\n9.  Attend all classes: ${d.attend.toUpperCase()}`;
     if (d.attend === 'no' && d.attendReason) t += `\n    9a. Reason: ${d.attendReason}`;
     t += '\n\n' + '='.repeat(42) + '\n';
