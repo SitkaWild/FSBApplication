@@ -114,6 +114,8 @@
   .doc-name { font-size: 14px; font-weight: 500; color: var(--ink); }
   .doc-status { font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
   .doc-badge { font-size: 11px; padding: 3px 10px; border-radius: 20px; background: var(--cream); border: 1px solid var(--border); color: var(--ink-soft); white-space: nowrap; }
+  .doc-badge-link { font-size: 12px; padding: 5px 14px; border-radius: 20px; background: var(--approved-bg, #eef5ee); border: 1px solid var(--forest-light); color: var(--forest); white-space: nowrap; text-decoration: none; font-weight: 500; }
+  .doc-badge-link:hover { background: var(--forest-light); color: white; }
 
   /* Buttons */
   .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 2rem; }
@@ -347,17 +349,17 @@
       <div class="doc-placeholder">
         <div class="doc-placeholder-left">
           <div class="doc-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-          <div><div class="doc-name">Class Syllabus</div><div class="doc-status">Coming soon</div></div>
+          <div><div class="doc-name">Class Syllabus</div><div class="doc-status">View or download</div></div>
         </div>
-        <span class="doc-badge">Pending upload</span>
+        <a class="doc-badge-link" href="syllabus.pdf" target="_blank" rel="noopener">View PDF</a>
       </div>
 
       <div class="doc-placeholder">
         <div class="doc-placeholder-left">
           <div class="doc-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-          <div><div class="doc-name">UAS Registration Form</div><div class="doc-status">Coming soon</div></div>
+          <div><div class="doc-name">UAS Registration Form</div><div class="doc-status">View or download</div></div>
         </div>
-        <span class="doc-badge">Pending upload</span>
+        <a class="doc-badge-link" href="uas_registration_form.pdf" target="_blank" rel="noopener">View PDF</a>
       </div>
 
       <div class="doc-placeholder" id="uas-parent-wrap">
@@ -371,9 +373,9 @@
       <div class="doc-placeholder">
         <div class="doc-placeholder-left">
           <div class="doc-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-          <div><div class="doc-name">Media Release</div><div class="doc-status">Coming soon</div></div>
+          <div><div class="doc-name">Media Release</div><div class="doc-status">View or download</div></div>
         </div>
-        <span class="doc-badge">Pending upload</span>
+        <a class="doc-badge-link" href="media_release.pdf" target="_blank" rel="noopener">View PDF</a>
       </div>
 
       <div id="parent-approval-wrap">
