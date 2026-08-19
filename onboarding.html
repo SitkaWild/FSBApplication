@@ -81,6 +81,16 @@
   .coc-box ul { padding-left: 1.25rem; margin-bottom: 0.75rem; }
   .coc-box ul li { margin-bottom: 0.4rem; }
 
+  /* Radio group (used for permission questions) */
+  .radio-group { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 4px; }
+  .radio-group label { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 400; color: var(--ink); cursor: pointer; margin: 0; }
+  .radio-group input[type=radio] { width: 18px; height: 18px; accent-color: var(--forest-light); cursor: pointer; }
+
+  /* Permission form (parent/guardian, high school students only) */
+  .permission-box { background: var(--warm-white); border: 1px solid var(--border); border-radius: 6px; padding: 1.25rem 1.5rem; margin-bottom: 1.25rem; font-size: 14px; line-height: 1.7; color: var(--ink-mid); }
+  .permission-box p { margin-bottom: 0.75rem; }
+  .student-name-display { background: var(--cream); border-radius: 6px; padding: 8px 12px; font-size: 14px; color: var(--ink); margin-bottom: 1rem; }
+
   /* Typed signature */
   .sig-type-wrap { border: 1px solid var(--border); border-radius: 6px; background: white; padding: 1rem 1.25rem; margin-bottom: 8px; min-height: 80px; display: flex; align-items: center; justify-content: center; }
   .sig-type-input { width: 100%; font-family: 'Dancing Script', cursive !important; font-size: 32px; color: #1c1c1a; border: none; background: transparent; outline: none; text-align: center; }
@@ -366,12 +376,43 @@
         <span class="doc-badge">Pending upload</span>
       </div>
 
-      <div class="doc-placeholder" id="parent-approval-wrap">
-        <div class="doc-placeholder-left">
-          <div class="doc-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-          <div><div class="doc-name">Parent Approval</div><div class="doc-status">For high school students — coming soon</div></div>
+      <div id="parent-approval-wrap">
+        <div class="section-title">Parent / Guardian Permission Form</div>
+        <div class="permission-box" id="permission-intro-text">Loading permission form…</div>
+
+        <div class="student-name-display">
+          <strong>Student:</strong> <span id="perm-student-name">—</span>
         </div>
-        <span class="doc-badge">Pending upload</span>
+
+        <div class="field">
+          <label>Do you, the parent/legal guardian of the above student, give permission for them to attend? <span class="req">*</span></label>
+          <div class="radio-group">
+            <label><input type="radio" name="perm-attend" value="yes" /> Yes</label>
+            <label><input type="radio" name="perm-attend" value="no" /> No</label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label id="perm-media-label">Do you give permission for the partner organizations to include your student's images in photos/videos from the event in media releases? <span class="req">*</span></label>
+          <div class="radio-group">
+            <label><input type="radio" name="perm-media" value="yes" /> Yes</label>
+            <label><input type="radio" name="perm-media" value="no" /> No</label>
+          </div>
+        </div>
+
+        <p class="sig-disclaimer" style="margin-bottom:14px;">Typing your name below acts as an electronic signature. This electronic signature and its related fields are treated like a handwritten signature on a paper form and is legally binding. By signing below you confirm you have read the SCS Code of Conduct above, support your child living up to its expectations, and agree to the terms described above.</p>
+
+        <div class="field">
+          <label>Parent/Legal Guardian Name — Electronic Signature <span class="req">*</span></label>
+          <div class="sig-type-wrap">
+            <input class="sig-type-input" id="parent-sig-typed" type="text" placeholder="Type parent/guardian name to sign" autocomplete="off" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="parent-sig-date">Date <span class="req">*</span></label>
+          <input type="date" id="parent-sig-date" style="max-width:220px;" />
+        </div>
       </div>
 
       <div class="actions">
@@ -401,6 +442,7 @@
 
   let appId = null;
   let appData = null;
+  let settingsData = null;
   let currentStep = 1;
 
   // Get app ID from URL
@@ -417,11 +459,33 @@
     if (data.student_type === 'Adult Student') {
       document.getElementById('uas-parent-wrap').style.display = 'none';
       document.getElementById('parent-approval-wrap').style.display = 'none';
+    } else {
+      loadPermissionFormSettings();
     }
 
     document.getElementById('loading-screen').style.display = 'none';
     document.getElementById('main-content').style.display = 'block';
     initSignature();
+  }
+
+  async function loadPermissionFormSettings() {
+    const { data, error } = await sb.from('program_settings').select('*').eq('id', 1).single();
+    if (error || !data) {
+      document.getElementById('permission-intro-text').textContent = 'Meeting details are unavailable right now. Please contact scs@sitkawild.org for details before signing.';
+      return;
+    }
+    settingsData = data;
+    document.getElementById('permission-intro-text').innerHTML =
+      `We are excited for your student to join us for the <strong>${esc(data.meeting_name)}</strong>, ` +
+      `taking place <strong>${esc(data.meeting_dates)}</strong> in <strong>${esc(data.meeting_location)}</strong>. ` +
+      `Travel dates are <strong>${esc(data.travel_dates)}</strong>. ${esc(data.logistics_text)}`;
+    document.getElementById('perm-media-label').innerHTML =
+      `Do you give permission for <strong>${esc(data.partner_orgs)}</strong> to include your student's images in photos/videos from the event in their media releases? <span class="req">*</span>`;
+  }
+
+  function esc(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
   function showError() {
@@ -444,6 +508,9 @@
     document.getElementById('sc-' + currentStep).classList.remove('done');
     document.getElementById('sc-' + currentStep).textContent = currentStep;
     document.getElementById('sl-' + currentStep).classList.add('active');
+    if (n === 3 && appData && appData.student_type !== 'Adult Student') {
+      document.getElementById('perm-student-name').textContent = v('legal-name') || '—';
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -481,6 +548,18 @@
     const sig = getSignatureData();
     if (!sig) { alert('Please type your name in the signature field to sign the Code of Conduct.'); return; }
 
+    const isHighSchool = appData && appData.student_type !== 'Adult Student';
+    let permAttend = null, permMedia = null, parentSigName = null;
+    if (isHighSchool) {
+      permAttend = document.querySelector('input[name="perm-attend"]:checked');
+      permMedia = document.querySelector('input[name="perm-media"]:checked');
+      parentSigName = v('parent-sig-typed');
+      if (!permAttend) { alert('Please answer the parent/guardian attendance permission question.'); return; }
+      if (!permMedia) { alert('Please answer the media release permission question.'); return; }
+      if (!parentSigName) { alert('Please type the parent/guardian name to sign the permission form.'); return; }
+      if (!v('parent-sig-date')) { alert('Please enter the date for the parent/guardian signature.'); return; }
+    }
+
     const btn = document.getElementById('submit-btn');
     btn.disabled = true;
     btn.textContent = '…Submitting';
@@ -501,6 +580,13 @@
       coc_signed_date: v('coc-date'),
       coc_signature: sig
     };
+
+    if (isHighSchool) {
+      payload.parent_permission_attend = permAttend.value;
+      payload.parent_permission_media = permMedia.value;
+      payload.parent_guardian_name = parentSigName;
+      payload.parent_guardian_date = v('parent-sig-date');
+    }
 
     const { error } = await sb.from('applications').update(payload).eq('id', appId);
     if (error) {

@@ -110,6 +110,17 @@
   /* Signature preview */
   .sig-preview { max-width: 300px; max-height: 100px; border: 1px solid var(--border); border-radius: 6px; margin-top: 6px; }
 
+  /* Settings modal form fields */
+  .field { margin-bottom: 1.1rem; }
+  .field label { display: block; font-size: 13px; font-weight: 600; color: var(--ink-mid); margin-bottom: 5px; }
+  .field input[type=text], .field textarea {
+    width: 100%; font-family: 'Source Sans 3', sans-serif; font-size: 14px; color: var(--ink);
+    background: var(--cream); border: 1px solid var(--border); border-radius: 6px;
+    padding: 8px 12px; transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .field input[type=text]:focus, .field textarea:focus { outline: none; border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(74,138,94,0.12); }
+  .field textarea { resize: vertical; line-height: 1.5; }
+
   .not-complete { text-align: center; padding: 2rem; color: var(--ink-soft); font-size: 14px; }
 
   @media (max-width: 600px) {
@@ -141,6 +152,7 @@
     </div>
     <div class="admin-header-right">
       <span class="badge-count" id="total-count">Loading…</span>
+      <button class="logout-btn" onclick="openSettingsModal()">Program Settings</button>
       <button class="logout-btn" onclick="doLogout()">Log out</button>
     </div>
   </div>
@@ -235,6 +247,12 @@
             <div class="detail-item"><label>COC signed name</label><p id="o-coc-name"></p></div>
             <div class="detail-item"><label>COC signed date</label><p id="o-coc-date"></p></div>
           </div>
+          <div class="detail-grid" id="o-parent-perm-wrap" style="margin-top:1rem;display:none;">
+            <div class="detail-item"><label>Parent permission — attend</label><p id="o-perm-attend"></p></div>
+            <div class="detail-item"><label>Parent permission — media release</label><p id="o-perm-media"></p></div>
+            <div class="detail-item"><label>Parent/guardian signature</label><p id="o-parent-sig-name"></p></div>
+            <div class="detail-item"><label>Parent/guardian signed date</label><p id="o-parent-sig-date"></p></div>
+          </div>
           <div class="detail-full" style="margin-top:1rem;">
             <label>Signature</label>
             <div id="o-sig-display"></div>
@@ -276,6 +294,49 @@
   </div>
 </div>
 
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settings-overlay" onclick="closeSettingsIfBg(event)">
+  <div class="modal" id="settings-modal" style="max-width:560px;">
+    <div class="modal-header">
+      <div>
+        <h2>Program Settings</h2>
+        <p>Used in the parent/guardian permission form for high school students</p>
+      </div>
+      <button class="modal-close" onclick="closeSettingsModal()">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label for="set-meeting-name">Meeting name</label>
+        <input type="text" id="set-meeting-name" placeholder="e.g. Southeast Regional Advisory Council Meeting" />
+      </div>
+      <div class="field">
+        <label for="set-meeting-dates">Meeting dates</label>
+        <input type="text" id="set-meeting-dates" placeholder="e.g. October 20th–22nd, 2026" />
+      </div>
+      <div class="field">
+        <label for="set-meeting-location">Meeting location</label>
+        <input type="text" id="set-meeting-location" placeholder="e.g. Gustavus, Alaska" />
+      </div>
+      <div class="field">
+        <label for="set-travel-dates">Travel dates</label>
+        <input type="text" id="set-travel-dates" placeholder="e.g. October 19 – October 23rd, 2026" />
+      </div>
+      <div class="field">
+        <label for="set-partner-orgs">Partner organizations (media release line)</label>
+        <input type="text" id="set-partner-orgs" placeholder="e.g. University of Alaska Southeast, USDA Forest Service, ..." />
+      </div>
+      <div class="field">
+        <label for="set-logistics">Logistics notes (housing, chaperones, etc.)</label>
+        <textarea id="set-logistics" rows="4" placeholder="Housing arrangements, chaperone names, addresses, etc."></textarea>
+      </div>
+      <div id="settings-save-status" style="font-size:13px;color:var(--ink-soft);margin-bottom:0.75rem;"></div>
+      <div class="modal-actions">
+        <button class="action-btn btn-send" onclick="saveProgramSettings()">Save Settings</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script>
@@ -298,6 +359,55 @@
   let currentFilter = 'All';
   let currentApp = null;
   let currentPreviewStatus = 'Approved';
+
+  function openSettingsModal() {
+    document.getElementById('settings-save-status').textContent = 'Loading current settings…';
+    document.getElementById('settings-overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    loadProgramSettings();
+  }
+
+  function closeSettingsModal() {
+    document.getElementById('settings-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function closeSettingsIfBg(e) {
+    if (e.target === document.getElementById('settings-overlay')) closeSettingsModal();
+  }
+
+  async function loadProgramSettings() {
+    const { data, error } = await sb.from('program_settings').select('*').eq('id', 1).single();
+    const status = document.getElementById('settings-save-status');
+    if (error || !data) {
+      status.textContent = 'Could not load settings. Make sure the program_settings table has been created.';
+      return;
+    }
+    document.getElementById('set-meeting-name').value = data.meeting_name || '';
+    document.getElementById('set-meeting-dates').value = data.meeting_dates || '';
+    document.getElementById('set-meeting-location').value = data.meeting_location || '';
+    document.getElementById('set-travel-dates').value = data.travel_dates || '';
+    document.getElementById('set-partner-orgs').value = data.partner_orgs || '';
+    document.getElementById('set-logistics').value = data.logistics_text || '';
+    status.textContent = '';
+  }
+
+  async function saveProgramSettings() {
+    const status = document.getElementById('settings-save-status');
+    status.textContent = 'Saving…';
+    const payload = {
+      id: 1,
+      meeting_name: document.getElementById('set-meeting-name').value.trim(),
+      meeting_dates: document.getElementById('set-meeting-dates').value.trim(),
+      meeting_location: document.getElementById('set-meeting-location').value.trim(),
+      travel_dates: document.getElementById('set-travel-dates').value.trim(),
+      partner_orgs: document.getElementById('set-partner-orgs').value.trim(),
+      logistics_text: document.getElementById('set-logistics').value.trim()
+    };
+    const { error } = await sb.from('program_settings').upsert(payload);
+    status.textContent = error ? 'Error saving settings. Please try again.' : 'Saved!';
+    if (!error) setTimeout(() => { status.textContent = ''; }, 2000);
+  }
 
   function doLogin() {
     const val = document.getElementById('password-input').value;
@@ -414,6 +524,15 @@
       document.getElementById('o-ec-address').textContent = app.ec_address || '—';
       document.getElementById('o-coc-name').textContent = app.coc_signed_name || '—';
       document.getElementById('o-coc-date').textContent = app.coc_signed_date ? new Date(app.coc_signed_date).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}) : '—';
+      if (app.student_type !== 'Adult Student') {
+        document.getElementById('o-parent-perm-wrap').style.display = 'grid';
+        document.getElementById('o-perm-attend').textContent = app.parent_permission_attend === 'yes' ? 'Yes' : (app.parent_permission_attend === 'no' ? 'No' : '—');
+        document.getElementById('o-perm-media').textContent = app.parent_permission_media === 'yes' ? 'Yes' : (app.parent_permission_media === 'no' ? 'No' : '—');
+        document.getElementById('o-parent-sig-name').textContent = app.parent_guardian_name || '—';
+        document.getElementById('o-parent-sig-date').textContent = app.parent_guardian_date ? new Date(app.parent_guardian_date).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}) : '—';
+      } else {
+        document.getElementById('o-parent-perm-wrap').style.display = 'none';
+      }
       const sigDiv = document.getElementById('o-sig-display');
       if (app.coc_signature && app.coc_signature.startsWith('data:image')) {
         sigDiv.innerHTML = '<img class="sig-preview" src="' + app.coc_signature + '" />';
@@ -594,6 +713,14 @@ Sitka Conservation Society`;
       ['Code of Conduct Signed Name', a.coc_signed_name],
       ['Code of Conduct Signed Date', a.coc_signed_date],
     ];
+    if (a.student_type !== 'Adult Student') {
+      rows.push(
+        ['Parent Permission — Attend', a.parent_permission_attend],
+        ['Parent Permission — Media Release', a.parent_permission_media],
+        ['Parent/Guardian Signature', a.parent_guardian_name],
+        ['Parent/Guardian Signed Date', a.parent_guardian_date]
+      );
+    }
     const csv = rows.map(r => r.map(csvEscape).join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -644,6 +771,12 @@ ${a.alaska_miles ? `<div class="row"><span class="label">Alaska Airlines #</span
 <div class="row"><span class="label">Signed Name</span><span class="value">${esc(a.coc_signed_name) || '—'}</span></div>
 <div class="row"><span class="label">Signed Date</span><span class="value">${cocDateStr}</span></div>
 <div class="row"><span class="label">Signature</span><span class="value">${sigHtml}</span></div>
+${a.student_type !== 'Adult Student' ? `
+<h2>Parent / Guardian Permission</h2>
+<div class="row"><span class="label">Permission to Attend</span><span class="value">${a.parent_permission_attend === 'yes' ? 'Yes' : (a.parent_permission_attend === 'no' ? 'No' : '—')}</span></div>
+<div class="row"><span class="label">Media Release Permission</span><span class="value">${a.parent_permission_media === 'yes' ? 'Yes' : (a.parent_permission_media === 'no' ? 'No' : '—')}</span></div>
+<div class="row"><span class="label">Parent/Guardian Signature</span><span class="value">${esc(a.parent_guardian_name) || '—'}</span></div>
+<div class="row"><span class="label">Signed Date</span><span class="value">${a.parent_guardian_date ? new Date(a.parent_guardian_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '—'}</span></div>` : ''}
 </body></html>`;
 
     const win = window.open('', '_blank');
