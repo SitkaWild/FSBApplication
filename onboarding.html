@@ -370,12 +370,34 @@
         <span class="doc-badge">Pending upload</span>
       </div>
 
-      <div class="doc-placeholder">
-        <div class="doc-placeholder-left">
-          <div class="doc-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-          <div><div class="doc-name">Media Release</div><div class="doc-status">View or download</div></div>
+      <div id="media-release-wrap">
+        <div class="doc-placeholder">
+          <div class="doc-placeholder-left">
+            <div class="doc-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+            <div><div class="doc-name">Media Release</div><div class="doc-status">View or download</div></div>
+          </div>
+          <a class="doc-badge-link" href="media_release.pdf" target="_blank" rel="noopener">View PDF</a>
         </div>
-        <a class="doc-badge-link" href="media_release.pdf" target="_blank" rel="noopener">View PDF</a>
+
+        <div class="field" style="margin-top:0.75rem;">
+          <label id="adult-media-label">Do you give permission for our partner organizations to include your images in photos/videos from the event in their media releases? <span class="req">*</span></label>
+          <div class="radio-group">
+            <label><input type="radio" name="adult-media" value="yes" /> Yes</label>
+            <label><input type="radio" name="adult-media" value="no" /> No</label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Signature <span class="req">*</span></label>
+          <div class="sig-type-wrap">
+            <input class="sig-type-input" id="adult-media-sig-typed" type="text" placeholder="Type your name to sign" autocomplete="off" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="adult-media-sig-date">Date <span class="req">*</span></label>
+          <input type="date" id="adult-media-sig-date" style="max-width:220px;" />
+        </div>
       </div>
 
       <div id="parent-approval-wrap">
@@ -457,12 +479,18 @@
     if (error || !data) { showError(); return; }
     appData = data;
 
-    // Hide HS-only docs if adult
+    // Hide HS-only or Adult-only sections depending on student type
     if (data.student_type === 'Adult Student') {
       document.getElementById('uas-parent-wrap').style.display = 'none';
       document.getElementById('parent-approval-wrap').style.display = 'none';
     } else {
-      loadPermissionFormSettings();
+      document.getElementById('media-release-wrap').style.display = 'none';
+    }
+    await loadProgramSettings();
+    if (data.student_type === 'Adult Student') {
+      renderAdultMediaConsent();
+    } else {
+      renderPermissionFormIntro();
     }
 
     document.getElementById('loading-screen').style.display = 'none';
@@ -470,19 +498,30 @@
     initSignature();
   }
 
-  async function loadPermissionFormSettings() {
+  async function loadProgramSettings() {
     const { data, error } = await sb.from('program_settings').select('*').eq('id', 1).single();
-    if (error || !data) {
+    settingsData = error ? null : data;
+  }
+
+  function renderPermissionFormIntro() {
+    if (!settingsData) {
       document.getElementById('permission-intro-text').textContent = 'Meeting details are unavailable right now. Please contact scs@sitkawild.org for details before signing.';
+      document.getElementById('perm-media-label').innerHTML = `Do you give permission for our partner organizations to include your student's images in photos/videos from the event in their media releases? <span class="req">*</span>`;
       return;
     }
-    settingsData = data;
+    const data = settingsData;
     document.getElementById('permission-intro-text').innerHTML =
       `We are excited for your student to join us for the <strong>${esc(data.meeting_name)}</strong>, ` +
       `taking place <strong>${esc(data.meeting_dates)}</strong> in <strong>${esc(data.meeting_location)}</strong>. ` +
       `Travel dates are <strong>${esc(data.travel_dates)}</strong>. ${esc(data.logistics_text)}`;
     document.getElementById('perm-media-label').innerHTML =
       `Do you give permission for <strong>${esc(data.partner_orgs)}</strong> to include your student's images in photos/videos from the event in their media releases? <span class="req">*</span>`;
+  }
+
+  function renderAdultMediaConsent() {
+    const orgs = settingsData && settingsData.partner_orgs ? settingsData.partner_orgs : 'our partner organizations';
+    document.getElementById('adult-media-label').innerHTML =
+      `Do you give permission for <strong>${esc(orgs)}</strong> to include your images in photos/videos from the event in their media releases? <span class="req">*</span>`;
   }
 
   function esc(str) {
@@ -562,6 +601,15 @@
       if (!v('parent-sig-date')) { alert('Please enter the date for the parent/guardian signature.'); return; }
     }
 
+    let adultMedia = null, adultMediaSigName = null;
+    if (!isHighSchool) {
+      adultMedia = document.querySelector('input[name="adult-media"]:checked');
+      adultMediaSigName = v('adult-media-sig-typed');
+      if (!adultMedia) { alert('Please answer the media release permission question.'); return; }
+      if (!adultMediaSigName) { alert('Please type your name to sign the media release consent.'); return; }
+      if (!v('adult-media-sig-date')) { alert('Please enter the date for the media release signature.'); return; }
+    }
+
     const btn = document.getElementById('submit-btn');
     btn.disabled = true;
     btn.textContent = '…Submitting';
@@ -588,6 +636,10 @@
       payload.parent_permission_media = permMedia.value;
       payload.parent_guardian_name = parentSigName;
       payload.parent_guardian_date = v('parent-sig-date');
+    } else {
+      payload.adult_media_permission = adultMedia.value;
+      payload.adult_media_signature = adultMediaSigName;
+      payload.adult_media_signed_date = v('adult-media-sig-date');
     }
 
     const { error } = await sb.from('applications').update(payload).eq('id', appId);

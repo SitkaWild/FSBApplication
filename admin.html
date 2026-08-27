@@ -253,6 +253,11 @@
             <div class="detail-item"><label>Parent/guardian signature</label><p id="o-parent-sig-name"></p></div>
             <div class="detail-item"><label>Parent/guardian signed date</label><p id="o-parent-sig-date"></p></div>
           </div>
+          <div class="detail-grid" id="o-adult-media-wrap" style="margin-top:1rem;display:none;">
+            <div class="detail-item"><label>Media release permission</label><p id="o-adult-media-perm"></p></div>
+            <div class="detail-item"><label>Signature</label><p id="o-adult-media-sig"></p></div>
+            <div class="detail-item"><label>Signed date</label><p id="o-adult-media-date"></p></div>
+          </div>
           <div class="detail-full" style="margin-top:1rem;">
             <label>Signature</label>
             <div id="o-sig-display"></div>
@@ -530,8 +535,13 @@
         document.getElementById('o-perm-media').textContent = app.parent_permission_media === 'yes' ? 'Yes' : (app.parent_permission_media === 'no' ? 'No' : '—');
         document.getElementById('o-parent-sig-name').textContent = app.parent_guardian_name || '—';
         document.getElementById('o-parent-sig-date').textContent = app.parent_guardian_date ? new Date(app.parent_guardian_date).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}) : '—';
+        document.getElementById('o-adult-media-wrap').style.display = 'none';
       } else {
         document.getElementById('o-parent-perm-wrap').style.display = 'none';
+        document.getElementById('o-adult-media-wrap').style.display = 'grid';
+        document.getElementById('o-adult-media-perm').textContent = app.adult_media_permission === 'yes' ? 'Yes' : (app.adult_media_permission === 'no' ? 'No' : '—');
+        document.getElementById('o-adult-media-sig').textContent = app.adult_media_signature || '—';
+        document.getElementById('o-adult-media-date').textContent = app.adult_media_signed_date ? new Date(app.adult_media_signed_date).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}) : '—';
       }
       const sigDiv = document.getElementById('o-sig-display');
       if (app.coc_signature && app.coc_signature.startsWith('data:image')) {
@@ -720,6 +730,12 @@ Sitka Conservation Society`;
         ['Parent/Guardian Signature', a.parent_guardian_name],
         ['Parent/Guardian Signed Date', a.parent_guardian_date]
       );
+    } else {
+      rows.push(
+        ['Media Release Permission', a.adult_media_permission],
+        ['Media Release Signature', a.adult_media_signature],
+        ['Media Release Signed Date', a.adult_media_signed_date]
+      );
     }
     const csv = rows.map(r => r.map(csvEscape).join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -776,7 +792,11 @@ ${a.student_type !== 'Adult Student' ? `
 <div class="row"><span class="label">Permission to Attend</span><span class="value">${a.parent_permission_attend === 'yes' ? 'Yes' : (a.parent_permission_attend === 'no' ? 'No' : '—')}</span></div>
 <div class="row"><span class="label">Media Release Permission</span><span class="value">${a.parent_permission_media === 'yes' ? 'Yes' : (a.parent_permission_media === 'no' ? 'No' : '—')}</span></div>
 <div class="row"><span class="label">Parent/Guardian Signature</span><span class="value">${esc(a.parent_guardian_name) || '—'}</span></div>
-<div class="row"><span class="label">Signed Date</span><span class="value">${a.parent_guardian_date ? new Date(a.parent_guardian_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '—'}</span></div>` : ''}
+<div class="row"><span class="label">Signed Date</span><span class="value">${a.parent_guardian_date ? new Date(a.parent_guardian_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '—'}</span></div>` : `
+<h2>Media Release</h2>
+<div class="row"><span class="label">Permission Granted</span><span class="value">${a.adult_media_permission === 'yes' ? 'Yes' : (a.adult_media_permission === 'no' ? 'No' : '—')}</span></div>
+<div class="row"><span class="label">Signature</span><span class="value">${esc(a.adult_media_signature) || '—'}</span></div>
+<div class="row"><span class="label">Signed Date</span><span class="value">${a.adult_media_signed_date ? new Date(a.adult_media_signed_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '—'}</span></div>`}
 </body></html>`;
 
     const win = window.open('', '_blank');
