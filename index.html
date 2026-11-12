@@ -52,8 +52,6 @@
   .page-footer { text-align: center; padding: 1.5rem; font-size: 12px; color: var(--ink-soft); border-top: 1px solid var(--border); }
   .sneaky { color: transparent; user-select: none; font-size: 11px; cursor: default; text-decoration: none; }
   .sneaky:hover { color: transparent; }
-  .footer-org { display: block; color: var(--ink-soft); text-decoration: none; font-size: 12px; margin-bottom: 4px; }
-  .footer-org:hover { color: var(--ink-soft); text-decoration: none; }
   @media (max-width: 480px) { .page-body { padding: 1.5rem 1rem 3rem; } .actions { flex-direction: column; } .btn { justify-content: center; } }
 </style>
 </head>
@@ -62,14 +60,13 @@
 <header class="page-header">
   <span class="tag">Application Form</span>
   <h1>Policy &amp; Procedures<br>Practicum Class</h1>
-  <p>Hello, thank you for your interest in the Practicum Class. Please complete all required fields below.<br>Southeast Regional Advisory Council Meeting; meeting dates October 20th–22nd, 2026 in Gustavus, Alaska.</p>
+  <p>Hello, thank you for your interest in the Practicum Class. Please complete all required fields below.<br>Federal Subsistence Board Meeting; meeting dates February 2nd–5th, 2027 in Anchorage, Alaska.<br>Class dates: January 19, 21, 26 &amp; 28, 2027, plus two additional classes in February (dates to be announced).</p>
 </header>
 
 <main class="page-body">
 
   <div class="info-box">
-    <strong>Before you begin:</strong> If you are accepted into the program, you are expected to attend all classes unless prior arrangements have been made with course instructors.<br>You're required to travel to the regulatory meeting (travel dates: October 19 – October 23rd).<br><br>
-    📄 <a href="syllabus.pdf" target="_blank" rel="noopener" style="color: var(--forest-light); font-weight: 600;">View the Class Syllabus (PDF)</a>
+    <strong>Before you begin:</strong> If you are accepted into the program, you are expected to attend all classes unless prior arrangements have been made with course instructors.<br>You're required to travel to the regulatory meeting (travel dates: February 1st – February 6th, 2027).
   </div>
 
   <div class="section">
@@ -121,8 +118,8 @@
       <textarea id="resources" placeholder="Share your experience and involvement…"></textarea>
     </div>
     <div class="field">
-      <label for="goals">8. Goals <span class="req">*</span></label>
-      <p class="hint">What do you hope to learn or gain from this program, and how might this experience help you in the future?</p>
+      <label for="goals">8. Hopes and goals <span class="req">*</span></label>
+      <p class="hint">What are your hopes to get out of this program and what might this experience benefit for your future?</p>
       <textarea id="goals" placeholder="Tell us what you hope to achieve…"></textarea>
     </div>
   </div>
@@ -131,7 +128,6 @@
     <div class="section-title">Attendance</div>
     <div class="field">
       <label>9. Will you be able to attend all classes? <span class="req">*</span></label>
-      <p class="hint">Southeast Regional Advisory Council Meeting; meeting dates October 20th–22nd, 2026 in Gustavus, Alaska.</p>
       <div class="radio-group">
         <label><input type="radio" name="attend" value="yes" onchange="handleAttend()" /> Yes</label>
         <label><input type="radio" name="attend" value="no" onchange="handleAttend()" /> No</label>
@@ -142,8 +138,6 @@
       <textarea id="attend-reason" placeholder="List dates or reasons you cannot attend…" style="min-height:70px;"></textarea>
     </div>
   </div>
-
-  <p style="font-size: 13px; color: var(--ink-soft); margin: -1rem 0 1.75rem; line-height: 1.5;">If you have any issues submitting your application please email <a href="mailto:info@sitkawild.org" style="color: var(--forest-light);">info@sitkawild.org</a>.</p>
 
   <hr />
   <div class="actions">
@@ -165,8 +159,9 @@
 </main>
 
 <footer class="page-footer">
-  <a href="admin.html" class="footer-org">Sitka Conservation Society</a>
   Policy &amp; Procedures Practicum Class &mdash; Application
+  &nbsp;&nbsp;
+  <a href="admin.html" class="sneaky" tabindex="-1" aria-hidden="true">c</a>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -247,7 +242,7 @@
       if (d.school)  t += `6.  High school:   ${d.school}\n`;
     }
     t += `\n7.  Relationship to local resources:\n    ${d.resources.replace(/\n/g, '\n    ')}\n`;
-    t += `\n8.  Goals:\n    ${d.goals.replace(/\n/g, '\n    ')}\n`;
+    t += `\n8.  Hopes and goals:\n    ${d.goals.replace(/\n/g, '\n    ')}\n`;
     t += `\n9.  Attend all classes: ${d.attend.toUpperCase()}`;
     if (d.attend === 'no' && d.attendReason) t += `\n    9a. Reason: ${d.attendReason}`;
     t += '\n\n' + '='.repeat(42) + '\n';
@@ -283,6 +278,10 @@
       btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Submit application';
       return;
     }
+
+    const body = buildText(d);
+    const subject = `Practicum Class Application – ${d.name}`;
+    window.location.href = `mailto:${RECIPIENT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
     document.getElementById('success-msg').style.display = 'block';
     document.getElementById('success-msg').scrollIntoView({ behavior: 'smooth', block: 'nearest' });

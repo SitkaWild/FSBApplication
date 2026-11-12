@@ -121,6 +121,13 @@
   .field input[type=text]:focus, .field textarea:focus { outline: none; border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(74,138,94,0.12); }
   .field textarea { resize: vertical; line-height: 1.5; }
 
+  .bulk-actions { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+  .bulk-btn { background: transparent; border: 1px solid var(--forest-light); border-radius: 6px; padding: 5px 14px; font-size: 13px; font-family: 'Source Sans 3', sans-serif; color: var(--forest); cursor: pointer; transition: all 0.15s; }
+  .bulk-btn:hover { background: var(--success-bg); }
+  .bulk-btn.danger { border-color: var(--denied-border); color: var(--denied-text); }
+  .bulk-btn.danger:hover { background: var(--denied-bg); }
+  .bulk-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
   .not-complete { text-align: center; padding: 2rem; color: var(--ink-soft); font-size: 14px; }
 
   @media (max-width: 600px) {
@@ -162,6 +169,11 @@
     <button class="filter-btn" onclick="setFilter('Pending', this)">Pending</button>
     <button class="filter-btn" onclick="setFilter('Approved', this)">Approved</button>
     <button class="filter-btn" onclick="setFilter('Denied', this)">Denied</button>
+    <div class="bulk-actions">
+      <button class="bulk-btn" id="bulk-csv-btn" onclick="exportAllCSV()">Export CSV</button>
+      <button class="bulk-btn" id="bulk-pdf-btn" onclick="exportAllPDF()">Export PDF</button>
+      <button class="bulk-btn danger" id="bulk-clear-btn" onclick="clearApplicants()">Clear applicants</button>
+    </div>
   </div>
 
   <div class="table-wrap">
@@ -327,6 +339,10 @@
         <input type="text" id="set-travel-dates" placeholder="e.g. October 19 – October 23rd, 2026" />
       </div>
       <div class="field">
+        <label for="set-class-dates">Class dates</label>
+        <input type="text" id="set-class-dates" placeholder="e.g. January 19, 21, 26 &amp; 28, 2027 (+ 2 February classes, dates TBD)" />
+      </div>
+      <div class="field">
         <label for="set-partner-orgs">Partner organizations (media release line)</label>
         <input type="text" id="set-partner-orgs" placeholder="e.g. University of Alaska Southeast, USDA Forest Service, ..." />
       </div>
@@ -392,6 +408,7 @@
     document.getElementById('set-meeting-dates').value = data.meeting_dates || '';
     document.getElementById('set-meeting-location').value = data.meeting_location || '';
     document.getElementById('set-travel-dates').value = data.travel_dates || '';
+    document.getElementById('set-class-dates').value = data.class_dates || '';
     document.getElementById('set-partner-orgs').value = data.partner_orgs || '';
     document.getElementById('set-logistics').value = data.logistics_text || '';
     status.textContent = '';
@@ -406,12 +423,13 @@
       meeting_dates: document.getElementById('set-meeting-dates').value.trim(),
       meeting_location: document.getElementById('set-meeting-location').value.trim(),
       travel_dates: document.getElementById('set-travel-dates').value.trim(),
+      class_dates: document.getElementById('set-class-dates').value.trim(),
       partner_orgs: document.getElementById('set-partner-orgs').value.trim(),
       logistics_text: document.getElementById('set-logistics').value.trim()
     };
     const { error } = await sb.from('program_settings').upsert(payload);
-    status.textContent = error ? 'Error saving settings. Please try again.' : 'Saved!';
-    if (!error) setTimeout(() => { status.textContent = ''; }, 2000);
+    status.textContent = error ? 'Error saving settings: ' + error.message : 'Saved!';
+    if (!error) { programSettings = payload; setTimeout(() => { status.textContent = ''; }, 2000); }
   }
 
   function doLogin() {
@@ -434,7 +452,14 @@
     allApps = [];
   }
 
+  let programSettings = null;
+  async function fetchProgramSettings() {
+    const { data } = await sb.from('program_settings').select('*').eq('id', 1).single();
+    if (data) programSettings = data;
+  }
+
   async function loadApplications() {
+    await fetchProgramSettings();
     document.getElementById('loading-state').style.display = 'block';
     document.getElementById('app-table').style.display = 'none';
     document.getElementById('empty-state').style.display = 'none';
@@ -584,16 +609,21 @@
 
   function buildEmailBody(status, app) {
     const link = BASE_URL + 'onboarding.html?id=' + app.id;
+    const ps = programSettings || {};
+    const detailLines = [];
+    if (ps.class_dates) detailLines.push('• Class Dates: ' + ps.class_dates);
+    if (ps.meeting_name) detailLines.push('• Meeting: ' + ps.meeting_name);
+    if (ps.meeting_dates) detailLines.push('• Meeting Dates: ' + ps.meeting_dates);
+    if (ps.meeting_location) detailLines.push('• Location: ' + ps.meeting_location);
+    if (ps.travel_dates) detailLines.push('• Travel Dates: ' + ps.travel_dates);
+    const classDetails = detailLines.length ? detailLines.join('\n') : '• Details to follow';
     if (status === 'Approved') {
       return `Dear ${app.name},
 
 Congratulations! We are pleased to inform you that your application for the Policy and Procedures Practicum Class has been approved.
 
 Class Details:
-• Meeting: Southeast Regional Advisory Council Meeting
-• Meeting Dates: October 20–22, 2026
-• Location: Gustavus, Alaska
-• Travel Dates: October 19–23, 2026
+${classDetails}
 
 Please complete your onboarding using the link below. You will need to provide travel information, complete a UAS registration, and sign a few waivers:
 
@@ -803,6 +833,118 @@ ${a.student_type !== 'Adult Student' ? `
     win.document.write(html);
     win.document.close();
     win.onload = () => { win.focus(); win.print(); };
+  }
+
+
+  // ── Bulk export & clear (respects the current filter) ──
+  function getFilteredApps() {
+    return currentFilter === 'All' ? allApps : allApps.filter(a => a.status === currentFilter);
+  }
+
+  const EXPORT_COLUMNS = [
+    ['Submitted', a => a.created_at ? new Date(a.created_at).toLocaleDateString('en-US') : ''],
+    ['Status', a => a.status],
+    ['Name', a => a.name],
+    ['Email', a => a.email],
+    ['Community', a => a.community],
+    ['Student Type', a => a.student_type],
+    ['Organization', a => a.organization],
+    ['Adult Sponsor', a => a.sponsor],
+    ['High School', a => a.high_school],
+    ['Local Resources', a => a.local_resources],
+    ['Goals', a => a.goals],
+    ['Attend All Classes', a => a.attend_all],
+    ['Absence Reason', a => a.attend_reason],
+    ['Onboarding Complete', a => a.onboarding_complete ? 'Yes' : 'No'],
+    ['Legal Name', a => a.legal_name],
+    ['Gender', a => a.gender],
+    ['Date of Birth', a => a.dob],
+    ['Allergies', a => a.allergies],
+    ['Alaska Airlines #', a => a.alaska_miles],
+    ['Emergency Contact Name', a => a.ec_name],
+    ['Emergency Contact Relationship', a => a.ec_relationship],
+    ['Emergency Contact Phone', a => a.ec_phone],
+    ['Emergency Contact Email', a => a.ec_email],
+    ['Emergency Contact Address', a => a.ec_address],
+    ['Code of Conduct Signed Name', a => a.coc_signed_name],
+    ['Code of Conduct Signed Date', a => a.coc_signed_date],
+    ['Code of Conduct Signature', a => a.coc_signature && a.coc_signature.startsWith('data:image') ? '(image)' : (a.coc_signature || '').replace('typed:', '').replace('uploaded:', 'Uploaded file: ')],
+    ['Parent Permission - Attend', a => a.parent_permission_attend],
+    ['Parent Permission - Media', a => a.parent_permission_media],
+    ['Parent/Guardian Signature', a => a.parent_guardian_name],
+    ['Parent/Guardian Signed Date', a => a.parent_guardian_date],
+    ['Adult Media Permission', a => a.adult_media_permission],
+    ['Adult Media Signature', a => a.adult_media_signature],
+    ['Adult Media Signed Date', a => a.adult_media_signed_date]
+  ];
+
+  function filterLabel() { return currentFilter === 'All' ? 'all' : currentFilter.toLowerCase(); }
+
+  function exportAllCSV() {
+    const apps = getFilteredApps();
+    if (!apps.length) { alert('No applicants to export.'); return; }
+    const rows = [EXPORT_COLUMNS.map(c => c[0])];
+    apps.forEach(a => rows.push(EXPORT_COLUMNS.map(c => c[1](a))));
+    const csv = '\uFEFF' + rows.map(r => r.map(csvEscape).join(',')).join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `applicants_${filterLabel()}_${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
+  function exportAllPDF() {
+    const apps = getFilteredApps();
+    if (!apps.length) { alert('No applicants to export.'); return; }
+    const fmt = d => d ? new Date(d).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+    const sections = apps.map(a => {
+      const rows = EXPORT_COLUMNS
+        .filter(c => !['Onboarding Complete'].includes(c[0]))
+        .map(c => [c[0], c[1](a)])
+        .filter(r => r[1] !== '' && r[1] != null)
+        .map(r => `<div class="row"><span class="label">${esc(r[0])}</span><span class="value">${esc(String(r[1]))}</span></div>`)
+        .join('');
+      return `<section><h1>${esc(a.name)}</h1><p class="meta">${esc(a.status)} · Onboarding ${a.onboarding_complete ? 'complete' : 'not complete'}</p>${rows}</section>`;
+    }).join('');
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8" /><title>Applicants — ${filterLabel()}</title>
+<style>
+  body { font-family: Arial, Helvetica, sans-serif; color:#1c1c1a; margin:0; padding:1.5rem; }
+  section { page-break-after: always; max-width:680px; margin:0 auto 2rem; }
+  section:last-child { page-break-after: auto; }
+  h1 { font-size:20px; border-bottom:2px solid #1a3a2a; padding-bottom:8px; margin-bottom:4px; }
+  .meta { font-size:12px; color:#6b6b64; margin-bottom:1rem; }
+  .row { display:flex; gap:1rem; margin-bottom:6px; }
+  .label { font-weight:600; width:200px; flex-shrink:0; font-size:12px; color:#6b6b64; }
+  .value { font-size:13px; white-space:pre-wrap; }
+</style></head><body>${sections}</body></html>`;
+    const win = window.open('', '_blank');
+    if (!win) { alert('Please allow pop-ups for this page to export the PDF.'); return; }
+    win.document.write(html);
+    win.document.close();
+    win.onload = () => { win.focus(); win.print(); };
+  }
+
+  async function clearApplicants() {
+    const apps = getFilteredApps();
+    if (!apps.length) { alert('There are no applicants to clear in this view.'); return; }
+    const scope = currentFilter === 'All' ? 'ALL ' + apps.length + ' applicants' : apps.length + ' ' + currentFilter + ' applicant' + (apps.length === 1 ? '' : 's');
+    if (!confirm('You are about to permanently delete ' + scope + ' and all of their application and onboarding data (including emergency contacts and signatures).\n\nThis cannot be undone.\n\nClick OK to continue.')) return;
+    if (confirm('Download a CSV backup of these applicants before deleting?\n\nOK = download backup first (recommended)\nCancel = skip backup')) {
+      exportAllCSV();
+    }
+    const typed = prompt('Type DELETE (all capitals) to permanently delete ' + scope + ':');
+    if (typed !== 'DELETE') { alert('Cancelled. Nothing was deleted.'); return; }
+
+    const ids = apps.map(a => a.id);
+    const { data, error } = await sb.from('applications').delete().in('id', ids).select('id');
+    if (error) { alert('Error deleting applicants: ' + error.message); return; }
+    if (!data || data.length === 0) { alert('Nothing was deleted. In Supabase, run: GRANT DELETE ON applications TO anon;'); return; }
+    alert(data.length + ' applicant' + (data.length === 1 ? '' : 's') + ' deleted.');
+    await loadApplications();
   }
 
   function esc(str) {
